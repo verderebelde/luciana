@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_blank">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pedidos VR</title>
+<meta name="theme-color" content="#2e7d32">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pedidos VR">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#2e7d32; --primary-dark:#1b5e20; --primary-light:#e8f5e9;
+  --accent:#66bb6a; --text:#2f3e2f; --bg:#f8faf8; --muted:#7a8f7a;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text);padding:0 14px 40px}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid #e3ece3;margin-bottom:12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.marca{display:flex;align-items:center;gap:10px}
+.marca img{height:38px;width:38px;border-radius:9px}
+h1{margin:0;font-size:20px;color:var(--primary)}
+.estado{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:4px}
+.punto{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.punto.error{background:#e57373}
+.btn-refrescar{border:none;background:var(--primary-light);color:var(--primary);font:600 13px 'Montserrat';padding:8px 12px;border-radius:10px}
+.tabs{display:flex;gap:4px;margin-top:10px;background:#e8f0e8;padding:4px;border-radius:12px}
+.tab{flex:1;border:none;background:transparent;font:600 12.5px 'Montserrat';color:var(--muted);padding:9px 2px;border-radius:9px;white-space:nowrap}
+.tab.activa{background:white;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.contadores{display:flex;gap:8px;margin-top:10px;font-size:13px;flex-wrap:wrap}
+.chip{background:white;border:1px solid #e3ece3;border-radius:20px;padding:5px 12px}
+.chip b{color:var(--primary)}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin:20px 0 8px;border-left:4px solid var(--accent);padding-left:10px}
+.card{background:white;border:1px solid #e6efe6;border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:0 3px 10px rgba(0,0,0,.03)}
+.card.nuevo{animation:flash 2.5s ease-out;border-color:var(--accent)}
+@keyframes flash{0%{background:#d7f5d9}100%{background:white}}
+.fila1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.nombre{font-weight:700;font-size:17px}
+.total{font-weight:700;color:var(--primary);white-space:nowrap}
+.meta{font-size:12px;color:var(--muted);margin:2px 0 10px}
+.meta a{color:var(--muted)}
+.items{white-space:pre-wrap;font-size:13.5px;line-height:1.5;background:var(--bg);border-radius:10px;padding:10px 12px;margin:0}
+.obs{margin-top:8px;font-size:13px;background:#fffbea;border:1px solid #f0e2a3;color:#6b5b00;border-radius:10px;padding:8px 12px}
+.btn-wa{display:block;text-align:center;margin-top:12px;background:var(--primary);color:white;text-decoration:none;font-weight:700;font-size:15px;padding:14px;border-radius:12px;letter-spacing:.5px}
+.btn-wa:active{background:var(--primary-dark)}
+.card.ok{opacity:.7}
+.card.ok .items{font-size:12.5px}
+.ok-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px}
+.ok-row span{color:var(--primary);font-weight:600}
+.link-btn{background:none;border:none;color:var(--muted);text-decoration:underline;font:500 12px 'Montserrat';padding:4px}
+.vacio{text-align:center;color:var(--muted);font-size:14px;padding:30px 0}
+details.pasados summary{cursor:pointer;list-style:none}
+details.pasados summary::-webkit-details-marker{display:none}
+.tot-fila{display:flex;justify-content:space-between;align-items:center;gap:10px;background:white;border:1px solid #e6efe6;border-radius:12px;padding:10px 14px;margin-bottom:6px}
+.tot-nombre{font-weight:600;font-size:14px}
+.tot-det{font-size:11.5px;color:var(--muted);margin-top:2px}
+.tot-cant{font-weight:700;font-size:17px;color:var(--primary);white-space:nowrap;text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+.dif{font-size:12px;font-weight:700;margin-top:3px;padding:2px 8px;border-radius:8px;display:inline-block}
+.dif.sobra{background:#e8f5e9;color:#2e7d32}
+.dif.falta{background:#fdecea;color:#c62828}
+.dif.justo{background:#f1f1f1;color:#777}
+.oculto{display:none}
+.tot-fila.cero .tot-nombre{color:#9aa89a;font-weight:500}
+.tot-fila.cero .tot-cant{color:#b5c2b5}
+.tot-fila.suma{background:#fff8e1;border:1.5px solid #ffcc80;margin-top:-2px;margin-bottom:12px}
+.tot-fila.suma .tot-nombre{color:#e65100}
+.tot-fila.suma .tot-cant{color:#e65100}
+/* listas de envío (8 AM y mensaje) */
+.acciones{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px}
+.btn-sec{border:1.5px solid var(--primary);background:white;color:var(--primary);font:600 13px 'Montserrat';padding:10px 12px;border-radius:10px;flex:1;min-width:140px}
+.btn-sec:disabled{opacity:.5}
+.persona{display:flex;justify-content:space-between;align-items:center;gap:10px;background:white;border:1px solid #e6efe6;border-radius:12px;padding:10px 12px;margin-bottom:6px}
+.persona.enviado{opacity:.5}
+.persona .pn{font-weight:600;font-size:15px}
+.persona .pm{font-size:12px;color:var(--muted)}
+.btn-enviar{background:var(--primary);color:white;text-decoration:none;font-weight:700;font-size:14px;padding:10px 14px;border-radius:10px;white-space:nowrap}
+.persona.enviado .btn-enviar{background:#9e9e9e}
+.aviso{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-radius:12px;border:1.5px solid #dfe9df;background:white;color:var(--text)}
+.previa{font-size:13px;background:#fffbea;border:1px solid #f0e2a3;color:#6b5b00;border-radius:10px;padding:10px 12px;margin:8px 0 12px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <div class="marca"><img src="data:image/png;base64,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" alt=""><h1>Pedidos</h1></div>
+    <button class="btn-refrescar" onclick="refrescar()">↻ Actualizar</button>
+  </div>
+  <div class="estado"><span class="punto" id="punto"></span><span id="estado">Cargando…</span></div>
+  <div class="tabs">
+    <button class="tab activa" id="tab-pedidos" onclick="verVista('pedidos')">📋 Pedidos</button>
+    <button class="tab" id="tab-totales" onclick="verVista('totales')">⚖️ Totales</button>
+    <button class="tab" id="tab-ochoam" onclick="verVista('ochoam')">☀️ 8 AM</button>
+    <button class="tab" id="tab-mensaje" onclick="verVista('mensaje')">💬 Mensaje</button>
+  </div>
+</header>
+
+<!-- ============ PEDIDOS ============ -->
+<div id="vista-pedidos">
+  <div class="contadores" style="margin:0 0 12px">
+    <div class="chip">Por confirmar: <b id="n-pend">–</b></div>
+    <div class="chip">Pasados (VIEJOS): <b id="n-ok">–</b></div>
+  </div>
+  <button class="btn-sec" id="b-excel" style="width:100%;margin-bottom:10px" onclick="generarExcel()">📄 Generar Excel de lo pedido (BYS)</button>
+  <div id="excel-res"></div>
+  <div id="pendientes"><div class="vacio">Cargando…</div></div>
+  <details class="pasados" id="pasados-wrap">
+    <summary><h2>Pasados a BYS · hoja VIEJOS (<span id="n-ok2">0</span>) ▾</h2></summary>
+    <div id="pasados"></div>
+  </details>
+</div>
+
+<!-- ============ TOTALES ============ -->
+<div id="vista-totales" class="oculto">
+  <div id="totales"><div class="vacio">Cargando…</div></div>
+</div>
+
+<!-- ============ 8 AM ============ -->
+<div id="vista-ochoam" class="oculto">
+  <p class="aviso">Mensaje: <i>“Buen día <b>Nombre</b>! ¿quieres hacer pedido esta semana?”</i></p>
+  <div class="acciones">
+    <button class="btn-sec" id="b-limpiar" onclick="limpiar8am()">🧹 Quitar los que ya pidieron</button>
+    <button class="btn-sec" id="b-copiar" onclick="copiar8am()">📥 Cargar lista desde MASTER</button>
+  </div>
+  <div class="contadores" style="margin-top:0;margin-bottom:10px">
+    <div class="chip">En la lista: <b id="n8-total">–</b></div>
+    <div class="chip">Enviados: <b id="n8-env">0</b></div>
+    <button class="link-btn" onclick="borrarMarcas('8am')">Borrar marcas de enviado</button>
+  </div>
+  <div id="lista8am"><div class="vacio">Cargando…</div></div>
+</div>
+
+<!-- ============ MENSAJE ============ -->
+<div id="vista-mensaje" class="oculto">
+  <p class="aviso">Texto del mensaje (es la celda E1 de la hoja <b>mensaje</b>). Se envía como: <i>“Hola <b>Nombre</b>, …”</i></p>
+  <textarea id="texto-msg" placeholder="Escribe aquí el mensaje…" oninput="previaMsg()"></textarea>
+  <div class="previa" id="previa-msg"></div>
+  <div class="acciones">
+    <button class="btn-sec" id="b-guardar" onclick="guardarMensaje()">💾 Guardar mensaje</button>
+    <button class="btn-sec" id="b-generar" onclick="generarMensajes()">🔄 Generar lista (de BYS)</button>
+  </div>
+  <div class="contadores" style="margin-top:0;margin-bottom:10px">
+    <div class="chip">En la lista: <b id="nm-total">–</b></div>
+    <div class="chip">Enviados: <b id="nm-env">0</b></div>
+    <button class="link-btn" onclick="borrarMarcas('msg')">Borrar marcas de enviado</button>
+  </div>
+  <div id="listamsg"><div class="vacio">Cargando…</div></div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
+const CADA_SEGUNDOS = 15;
+
+// Clientes que tienen WhatsApp en OTRO número (por ejemplo extranjero).
+// A la izquierda: el móvil que ponen en el pedido. A la derecha: su WhatsApp,
+// con el prefijo del país delante (sin + ni espacios).
+const WHATSAPP_DISTINTO = {
+  "634541650": "32495124682"   // Charlotte → +32 495 12 46 82
+};
+
+let vista = "pedidos";
+let conocidos = null;     // ids ya vistos, para resaltar los nuevos
+let pedidos = [];         // hoja PEDIDOS
+let pasados = [];         // hoja VIEJOS
+let totales = [];         // hoja TOTALES
+let lista8 = null;        // hoja 8 AM
+let listaMsg = null;      // hoja mensaje
+let textoGuardado = "";
+let enviando = {};        // id -> "enviando" | "error"
+let cargando = false;
+
+/* ---------- utilidades ---------- */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function num(n){ return String(Math.round(n * 100) / 100).replace(".", ","); }
+function cantidad(n, formato){
+  return formato.toLowerCase() === "kg" ? num(n) + " kg" : num(n) + " × " + esc(formato || "ud");
+}
+function wa(movil, prefijo, texto){
+  const numero = WHATSAPP_DISTINTO[movil] || ((prefijo || "34") + movil);
+  return "https://wa.me/" + numero + "?text=" + encodeURIComponent(texto);
+}
+function estado(texto, error){
+  document.getElementById("estado").textContent = texto;
+  document.getElementById("punto").classList.toggle("error", !!error);
+}
+function guardarLocal(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+function leerLocal(k, def){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
+
+function llamar(params, segundos){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), (segundos || 60) * 1000);
+  return fetch(API_URL + "?" + params + "&t=" + Date.now(), { cache: "no-store", signal: ctrl.signal })
+    .then(r => r.json())
+    .then(d => { clearTimeout(t); if (!d || !d.ok) throw new Error(d && d.error || "respuesta vacía"); return d; })
+    .catch(err => { clearTimeout(t); throw err; });
+}
+function msgError(err){ return err.name === "AbortError" ? "no responde" : err.message; }
+
+/* ---------- pestañas ---------- */
+function verVista(v){
+  vista = v;
+  ["pedidos","totales","ochoam","mensaje"].forEach(x => {
+    document.getElementById("vista-" + x).classList.toggle("oculto", x !== v);
+    document.getElementById("tab-" + x).classList.toggle("activa", x === v);
+  });
+  guardarLocal("vista", v);
+  if (v === "ochoam" && lista8 === null) cargar8am();
+  if (v === "mensaje" && listaMsg === null) cargarMensajes();
+}
+function refrescar(){
+  if (vista === "ochoam") cargar8am();
+  else if (vista === "mensaje") cargarMensajes();
+  else cargar();
+}
+
+/* ---------- PEDIDOS ---------- */
+function textoConfirmacion(p){
+  return "Hola " + p.nombre + ", te confirmamos que hemos recibido el siguiente pedido:\n" +
+    p.pedido + "\n\nMuchas gracias\nNos vemos\n\nDabiz y Luciana\nVerde Rebelde";
+}
+
+function tarjeta(p, nuevo, esPasado){
+  const obs = p.observaciones ? `<div class="obs">📝 ${esc(p.observaciones)}</div>` : "";
+  const otroWa = WHATSAPP_DISTINTO[p.movil]
+    ? `<div class="meta" style="margin:8px 0 0">📱 La confirmación va a su WhatsApp +${WHATSAPP_DISTINTO[p.movil]}</div>` : "";
+  let pie;
+  if (esPasado) {
+    pie = `<div class="ok-row"><span>✓ En BYS</span>
+             <a class="link-btn" href="${wa(p.movil, "34", textoConfirmacion(p))}">reenviar confirmación</a></div>`;
+  } else if (enviando[p.id] === "enviando") {
+    pie = `<div class="ok-row"><span>⏳ Pasando a BYS…</span></div>`;
+  } else if (enviando[p.id] === "error") {
+    pie = `<div class="ok-row"><span style="color:#c62828">⚠️ No se pudo pasar a BYS</span>
+             <button class="link-btn" onclick="confirmar('${p.id}')">Reintentar</button></div>`;
+  } else {
+    pie = `<a class="btn-wa" href="${wa(p.movil, "34", textoConfirmacion(p))}" onclick="confirmar('${p.id}')">🟢 ENVIAR CONFIRMACIÓN</a>`;
+  }
+  return `
+    <div class="card ${esPasado ? 'ok' : ''} ${nuevo ? 'nuevo' : ''}">
+      <div class="fila1"><span class="nombre">${esc(p.nombre)}</span><span class="total">${esc(p.total)}</span></div>
+      <div class="meta">${esc(p.hora)} · <a href="tel:${p.movil}">${p.movil}</a></div>
+      <pre class="items">${esc(String(p.pedido).trim())}</pre>
+      ${obs}${otroWa}${pie}
+    </div>`;
+}
+
+function pintarPedidos(){
+  const pend = pedidos.slice().sort((a,b) => b.ts - a.ts);
+  const pas  = pasados.slice().sort((a,b) => b.ts - a.ts);
+  const nuevos = new Set();
+  if (conocidos) pedidos.forEach(p => { if (!conocidos.has(p.id)) nuevos.add(p.id); });
+
+  document.getElementById("pendientes").innerHTML =
+    pend.length ? pend.map(p => tarjeta(p, nuevos.has(p.id), false)).join("") : `<div class="vacio">No hay pedidos por confirmar 👌</div>`;
+  document.getElementById("pasados").innerHTML =
+    pas.length ? pas.map(p => tarjeta(p, false, true)).join("") : `<div class="vacio">La hoja VIEJOS está vacía</div>`;
+
+  document.getElementById("n-pend").textContent = pend.length;
+  document.getElementById("n-ok").textContent = pas.length;
+  document.getElementById("n-ok2").textContent = pas.length;
+
+  if (nuevos.size && navigator.vibrate) navigator.vibrate([150, 80, 150]);
+  conocidos = new Set(pedidos.map(p => p.id));
+}
+
+// ---- Sumas de productos que se piden en distintos formatos ----
+// Para añadir otro (por ejemplo mandarinas de 1 y 3 kg) basta con una línea más.
+//   palabra: lo que tiene que aparecer en el nombre del producto
+//   tipo "kg": suma en kilos (formato "kg" = 1 kg, "3 kg" = 3 kg, "5 kg" = 5 kg…)
+//   tipo "cartones": huevos (½ docena = 0,5 docenas; 1 cartón = 2,5 docenas)
+const SUMAS = [
+  { titulo: "TOMATES TOTALES",    palabra: "TOMATE",    tipo: "kg" },
+  { titulo: "MANDARINAS TOTALES", palabra: "MANDARINA", tipo: "kg" },
+  { titulo: "NARANJAS TOTALES",   palabra: "NARANJA",   tipo: "kg" },
+  { titulo: "HUEVOS CARTONES",    palabra: "HUEVO",     tipo: "cartones" }
+];
+const DOCENAS_POR_CARTON = 2.5;
+
+// Cuánto vale 1 unidad del producto en la unidad de la suma (o null si no entra)
+function factor(t, tipo){
+  const f = String(t.formato || "").toLowerCase().trim();
+  const n = String(t.nombre || "").toLowerCase();
+  if (tipo === "kg") {
+    let m = f.match(/^(\d+(?:[.,]\d+)?)\s*kg$/);
+    if (m) return parseFloat(m[1].replace(",", "."));
+    if (f === "kg") { m = n.match(/(\d+(?:[.,]\d+)?)\s*kg/); return m ? parseFloat(m[1].replace(",", ".")) : 1; }
+    return null;                                   // ml, unidad… no se suma
+  }
+  if (tipo === "cartones") {
+    const txt = f + " " + n;
+    if (/1\/2\s*docena|media\s*docena/.test(txt)) return 0.5 / DOCENAS_POR_CARTON;
+    if (/docena/.test(txt)) return 1 / DOCENAS_POR_CARTON;
+    return null;
+  }
+  return null;
+}
+
+function filaSuma(s, miembros){
+  let pedido = 0, dif = 0, hayDif = false, detalle = [];
+  miembros.forEach(({t, k}) => {
+    pedido += t.total * k;
+    if (t.dif !== null) { dif += t.dif * k; hayDif = true; }
+    detalle.push(num(t.total) + " × " + esc(t.formato || t.nombre));
+  });
+  const unidad = s.tipo === "kg" ? " kg" : (Math.abs(pedido - 1) < 0.001 ? " cartón" : " cartones");
+  let difHtml = "";
+  if (hayDif) {
+    dif = Math.round(dif * 100) / 100;
+    if (dif > 0)      difHtml = `<div class="dif sobra">sobran ${num(dif)}</div>`;
+    else if (dif < 0) difHtml = `<div class="dif falta">faltan ${num(-dif)}</div>`;
+    else              difHtml = `<div class="dif justo">justo</div>`;
+  }
+  const extra = s.tipo === "cartones" ? " · " + num(pedido * DOCENAS_POR_CARTON) + " docenas" : "";
+  return `
+    <div class="tot-fila suma">
+      <div><div class="tot-nombre">Σ ${esc(s.titulo)}</div><div class="tot-det">${detalle.join(" + ")}${extra}</div></div>
+      <div class="tot-cant">${num(pedido)}${unidad}${difHtml}</div>
+    </div>`;
+}
+
+function pintarTotales(){
+  const cont = document.getElementById("totales");
+  if (!totales.length) { cont.innerHTML = '<div class="vacio">No se encontraron productos en TOTALES</div>'; return; }
+
+  // qué productos entran en cada suma, y después de cuál se pinta la suma
+  const grupos = SUMAS.map(s => ({ s, miembros: [] }));
+  totales.forEach((t, i) => {
+    const nombre = String(t.nombre).toUpperCase();
+    grupos.forEach(g => {
+      if (nombre.indexOf(g.s.palabra) === -1) return;
+      const k = factor(t, g.s.tipo);
+      if (k !== null) g.miembros.push({ t, k, i });
+    });
+  });
+  const despuesDe = {};
+  grupos.filter(g => g.miembros.length >= 2).forEach(g => {
+    const ultimo = g.miembros[g.miembros.length - 1].i;
+    (despuesDe[ultimo] = despuesDe[ultimo] || []).push(filaSuma(g.s, g.miembros));
+  });
+
+  let html = "", cat = null;
+  totales.forEach((t, i) => {
+    if (t.categoria !== cat) { cat = t.categoria; html += `<h2>${esc(cat)}</h2>`; }
+    let dif = "";
+    if (t.dif !== null) {
+      if (t.dif > 0)      dif = `<div class="dif sobra">sobran ${num(t.dif)}</div>`;
+      else if (t.dif < 0) dif = `<div class="dif falta">faltan ${num(-t.dif)}</div>`;
+      else                dif = `<div class="dif justo">justo</div>`;
+    }
+    html += `
+      <div class="tot-fila ${t.total ? '' : 'cero'}">
+        <div><div class="tot-nombre">${esc(t.nombre)}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : ""}</div></div>
+        <div class="tot-cant">${t.total ? cantidad(t.total, t.formato) : "0"}${dif}</div>
+      </div>`;
+    if (despuesDe[i]) html += despuesDe[i].join("");
+  });
+  cont.innerHTML = html;
+}
+
+function cargar(){
+  if (cargando) return;
+  cargando = true;
+  llamar("action=pedidos")
+    .then(d => {
+      cargando = false;
+      pedidos = d.pedidos.filter(p => enviando[p.id] !== "hecho");
+      pasados = d.pasados || [];
+      totales = d.totales || [];
+      pintarPedidos();
+      pintarTotales();
+      estado("Actualizado " + new Date().toLocaleTimeString("es-ES") + " · se actualiza solo");
+    })
+    .catch(err => {
+      cargando = false;
+      estado("Error: " + msgError(err) + " · reintentando…", true);
+      if (!pedidos.length) document.getElementById("pendientes").innerHTML =
+        '<div class="vacio">No se pudieron cargar los pedidos.<br><small>' + esc(err.message) + '</small></div>';
+    });
+}
+
+function confirmar(id){
+  const p = pedidos.find(x => x.id === id);
+  if (!p || enviando[id] === "enviando") return;
+  enviando[id] = "enviando";
+  setTimeout(pintarPedidos, 300);   // dejar que primero se abra WhatsApp
+  llamar("action=confirmar&id=" + encodeURIComponent(id))
+    .then(() => {
+      enviando[id] = "hecho";
+      pedidos = pedidos.filter(x => x.id !== id);
+      pintarPedidos();
+      cargar();
+    })
+    .catch(err => {
+      enviando[id] = "error";
+      estado("No se pudo pasar a BYS: " + err.message, true);
+      pintarPedidos();
+    });
+}
+
+/* ---------- EXCEL ---------- */
+function generarExcel(){
+  if (!confirm("Se creará un Excel nuevo con los pedidos que hay en BYS (tu hoja BYS no se toca). Tarda un poco. ¿Seguir?")) return;
+  const b = document.getElementById("b-excel");
+  const res = document.getElementById("excel-res");
+  b.disabled = true; b.textContent = "⏳ Generando Excel… (puede tardar 1-2 minutos)";
+  res.innerHTML = "";
+  llamar("action=excel", 330)
+    .then(d => {
+      res.innerHTML = `
+        <div class="card" style="background:#f1f8f1">
+          <div class="nombre" style="font-size:15px">✅ ${d.pedidos} pedidos en ${d.paginas} hojas A4</div>
+          <div class="meta">Pedidos por hoja: ${d.porPagina.join(" + ")} · también enviado a tu correo</div>
+          <a class="btn-wa" href="${d.excel}">⬇️ Descargar Excel</a>
+          <a class="btn-wa" style="background:white;color:var(--primary);border:1.5px solid var(--primary)" href="${d.pdf}">🖨️ PDF para imprimir</a>
+          <div class="ok-row"><a class="link-btn" href="${d.hoja}">Abrir en Google Sheets</a>
+            <button class="link-btn" onclick="document.getElementById('excel-res').innerHTML=''">cerrar</button></div>
+        </div>`;
+    })
+    .catch(err => {
+      res.innerHTML = '<div class="obs" style="background:#fdecea;border-color:#f5c2c0;color:#c62828">⚠️ No se pudo generar: ' + esc(msgError(err)) + '</div>';
+    })
+    .finally(() => { b.disabled = false; b.textContent = "📄 Generar Excel de lo pedido (BYS)"; });
+}
+
+/* ---------- listas de envío (8 AM y mensaje) ---------- */
+function marcas(tipo){ return leerLocal("marcas-" + tipo, {}); }
+function marcar(tipo, movil){
+  const m = marcas(tipo); m[movil] = Date.now(); guardarLocal("marcas-" + tipo, m);
+  setTimeout(() => tipo === "8am" ? pintar8am() : pintarMensajes(), 300);
+}
+function borrarMarcas(tipo){
+  if (!confirm("¿Borrar las marcas de enviado de esta lista?")) return;
+  guardarLocal("marcas-" + tipo, {});
+  tipo === "8am" ? pintar8am() : pintarMensajes();
+}
+function filaPersona(tipo, p, texto){
+  const enviado = !!marcas(tipo)[p.movil];
+  const nombre = p.nombre || "(sin nombre)";
+  const extra = p.nota ? " · " + esc(p.nota) : "";
+  return `
+    <div class="persona ${enviado ? 'enviado' : ''}">
+      <div><div class="pn">${esc(nombre)}</div><div class="pm">${p.movil}${extra}${enviado ? " · ✓ enviado" : ""}</div></div>
+      <a class="btn-enviar" href="${wa(p.movil, p.prefijo, texto)}" onclick="marcar('${tipo}','${p.movil}')">👉 ENVIAR</a>
+    </div>`;
+}
+
+/* 8 AM */
+function texto8am(p){
+  return "Buen día" + (p.nombre ? " " + p.nombre : "") + "! ¿quieres hacer pedido esta semana?";
+}
+function pintar8am(){
+  const cont = document.getElementById("lista8am");
+  if (!lista8) return;
+  const m = marcas("8am");
+  document.getElementById("n8-total").textContent = lista8.length;
+  document.getElementById("n8-env").textContent = lista8.filter(p => m[p.movil]).length;
+  cont.innerHTML = lista8.length ? lista8.map(p => filaPersona("8am", p, texto8am(p))).join("")
+                                 : '<div class="vacio">La hoja 8 AM está vacía</div>';
+}
+function accion8am(params, boton, textoBoton){
+  const b = document.getElementById(boton);
+  b.disabled = true; const antes = b.textContent; b.textContent = textoBoton;
+  estado("Trabajando en la hoja 8 AM…");
+  return llamar(params)
+    .then(d => { lista8 = d.lista; pintar8am(); estado("Hoja 8 AM actualizada " + new Date().toLocaleTimeString("es-ES")); })
+    .catch(err => estado("Error en 8 AM: " + msgError(err), true))
+    .finally(() => { b.disabled = false; b.textContent = antes; });
+}
+function cargar8am(){
+  estado("Cargando hoja 8 AM…");
+  llamar("action=ochoam")
+    .then(d => { lista8 = d.lista; pintar8am(); estado("Hoja 8 AM cargada " + new Date().toLocaleTimeString("es-ES")); })
+    .catch(err => { estado("Error en 8 AM: " + msgError(err), true);
+      document.getElementById("lista8am").innerHTML = '<div class="vacio">No se pudo cargar.<br><small>' + esc(err.message) + '</small></div>'; });
+}
+function limpiar8am(){
+  if (!confirm("Esto hace lo mismo que escribir en E1 de la hoja 8 AM: borra de la lista a los que ya están en BYS (y sus parejas). ¿Seguir?")) return;
+  accion8am("action=limpiar8am", "b-limpiar", "Quitando…");
+}
+function copiar8am(){
+  if (!confirm("Esto hace lo mismo que COPIARA8AM: vuelve a copiar la lista completa desde MASTER a la hoja 8 AM. ¿Seguir?")) return;
+  accion8am("action=copiar8am", "b-copiar", "Cargando…").then(() => guardarLocal("marcas-8am", {})).then(pintar8am);
+}
+
+/* MENSAJE */
+function textoMsg(p){
+  return "Hola " + p.nombre + ", " + document.getElementById("texto-msg").value;
+}
+function previaMsg(){
+  const t = document.getElementById("texto-msg").value;
+  const cambiado = t !== textoGuardado;
+  document.getElementById("previa-msg").textContent = "Vista previa: Hola Nombre, " + t + (cambiado ? "\n\n⚠️ Sin guardar en la hoja" : "");
+}
+function pintarMensajes(){
+  if (!listaMsg) return;
+  const m = marcas("msg");
+  document.getElementById("nm-total").textContent = listaMsg.length;
+  document.getElementById("nm-env").textContent = listaMsg.filter(p => m[p.movil]).length;
+  document.getElementById("listamsg").innerHTML = listaMsg.length
+    ? listaMsg.map(p => filaPersona("msg", p, textoMsg(p))).join("")
+    : '<div class="vacio">La lista está vacía. Pulsa “Generar lista”.</div>';
+}
+function recibirMensajes(d, ponerTexto){
+  listaMsg = d.lista;
+  textoGuardado = d.texto;
+  if (ponerTexto) document.getElementById("texto-msg").value = d.texto;
+  previaMsg();
+  pintarMensajes();
+}
+function cargarMensajes(){
+  estado("Cargando hoja mensaje…");
+  llamar("action=mensajes")
+    .then(d => { recibirMensajes(d, true); estado("Hoja mensaje cargada " + new Date().toLocaleTimeString("es-ES")); })
+    .catch(err => { estado("Error en mensaje: " + msgError(err), true);
+      document.getElementById("listamsg").innerHTML = '<div class="vacio">No se pudo cargar.<br><small>' + esc(err.message) + '</small></div>'; });
+}
+function accionMsg(params, boton, textoBoton, ponerTexto){
+  const b = document.getElementById(boton);
+  b.disabled = true; const antes = b.textContent; b.textContent = textoBoton;
+  return llamar(params)
+    .then(d => { recibirMensajes(d, ponerTexto); estado("Hoja mensaje actualizada " + new Date().toLocaleTimeString("es-ES")); })
+    .catch(err => estado("Error en mensaje: " + msgError(err), true))
+    .finally(() => { b.disabled = false; b.textContent = antes; });
+}
+function guardarMensaje(){
+  const t = document.getElementById("texto-msg").value;
+  const nuevo = t !== textoGuardado;
+  accionMsg("action=guardarmensaje&texto=" + encodeURIComponent(t), "b-guardar", "Guardando…", false)
+    .then(() => { if (nuevo) { guardarLocal("marcas-msg", {}); pintarMensajes(); } });
+}
+function generarMensajes(){
+  if (!confirm("Esto hace lo mismo que escribir en E3 de la hoja mensaje: rehace la lista de nombres y teléfonos a partir de BYS. ¿Seguir?")) return;
+  accionMsg("action=generarmensajes", "b-generar", "Generando…", false);
+}
+
+/* ---------- arranque ---------- */
+const vistaGuardada = leerLocal("vista", "pedidos");
+cargar();
+verVista(["pedidos","totales","ochoam","mensaje"].indexOf(vistaGuardada) !== -1 ? vistaGuardada : "pedidos");
+setInterval(() => { if (!document.hidden) cargar(); }, CADA_SEGUNDOS * 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) cargar(); });
+</script>
+</body>
+</html>
