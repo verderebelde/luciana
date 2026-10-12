@@ -206,7 +206,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "12-oct 22:15";
+const VERSION_PANEL = "12-oct 22:25";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -418,8 +418,8 @@ function pintarTotales(){
     '<div class="form-extra" style="grid-template-columns:1fr;margin-bottom:10px"><select class="ancho" onchange="ponerFiltro(this.value)">' +
     opcion("todos", "📋 Todos los productos") + opcion("faltan", "⚠️ Solo los que faltan") +
     (proveedores.length
-      ? '<optgroup label="Por proveedor (columna DK)">' + proveedores.map(p => opcion("prov:" + p, "🚚 " + esc(p))).join("") + "</optgroup>"
-      : '<option disabled>(no hay proveedores escritos en DK)</option>') +
+      ? '<optgroup label="Por proveedor (columna DQ)">' + proveedores.map(p => opcion("prov:" + p, "🚚 " + esc(p))).join("") + "</optgroup>"
+      : '<option disabled>(no hay proveedores escritos en DQ)</option>') +
     "</select></div>";
   if (filtroTot !== "todos") {
     html += visibles.length
