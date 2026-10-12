@@ -107,6 +107,13 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .editor-hay button{flex:1;font:600 14px 'Montserrat';padding:10px;border-radius:10px;border:1.5px solid var(--primary)}
 .editor-hay .guardar{background:var(--primary);color:white}
 .editor-hay .cancelar{background:white;color:var(--primary)}
+.filtros{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.filtro{border:1.5px solid #cfdccf;background:white;font:600 12.5px 'Montserrat';color:var(--text);padding:7px 11px;border-radius:20px}
+.filtro.sel{background:var(--primary);border-color:var(--primary);color:white}
+.filtro.falta{border-color:#f5c2c0;color:#c62828}
+.filtro.falta.sel{background:#c62828;border-color:#c62828;color:white}
+.prov{display:inline-block;font-size:10.5px;font-weight:700;color:#5d4037;background:#efebe9;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.copiar{width:100%;margin:0 0 10px}
 </style>
 </head>
 <body>
@@ -216,6 +223,7 @@ let pasados = [];         // hoja VIEJOS
 let totales = [];         // hoja TOTALES
 let dinero = null;        // TOTALES!DH67
 let editandoFila = null;  // producto de Totales que se está editando (HAY)
+let filtroTot = "todos";  // "todos" | "faltan" | "prov:NOMBRE"
 let lista8 = null;        // hoja 8 AM
 let listaMsg = null;      // hoja mensaje
 let textoGuardado = "";
@@ -397,8 +405,24 @@ function pintarTotales(){
     (despuesDe[ultimo] = despuesDe[ultimo] || []).push(filaSuma(g.s, g.miembros));
   });
 
-  let html = cabDinero, cat = null;
+  // Filtros: Todos · Faltan · un botón por proveedor (texto de la columna DK)
+  const proveedores = [...new Set(totales.map(t => t.proveedor).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+  if (filtroTot.startsWith("prov:") && proveedores.indexOf(filtroTot.slice(5)) === -1) filtroTot = "todos";
+  const pasaFiltro = t => filtroTot === "todos" ? true
+    : filtroTot === "faltan" ? (t.dif !== null && t.dif < 0)
+    : t.proveedor === filtroTot.slice(5);
+  const bot = (valor, texto, extra) => `<button class="filtro ${extra || ""} ${filtroTot === valor ? "sel" : ""}" onclick="ponerFiltro('${valor.replace(/'/g, "\\'")}')">${texto}</button>`;
+  const visibles = totales.filter(pasaFiltro);
+  let html = cabDinero + '<div class="filtros">' + bot("todos", "Todos") + bot("faltan", "⚠️ Faltan", "falta") +
+    proveedores.map(p => bot("prov:" + p, "🚚 " + esc(p))).join("") + "</div>";
+  if (filtroTot !== "todos") {
+    html += visibles.length
+      ? `<button class="btn-sec copiar" onclick="copiarLista()">📋 Copiar esta lista (${visibles.length}) para WhatsApp</button>`
+      : '<div class="vacio">No hay productos en esta lista</div>';
+  }
+  let cat = null;
   totales.forEach((t, i) => {
+    if (!pasaFiltro(t)) return;
     if (t.categoria !== cat) { cat = t.categoria; html += `<h2>${esc(cat)}</h2>`; }
     let dif = "";
     if (t.dif !== null) {
@@ -409,7 +433,7 @@ function pintarTotales(){
     const abierta = editandoFila === t.fila;
     html += `
       <div class="tot-fila editable ${t.total ? '' : 'cero'} ${abierta ? 'abierta' : ''}" onclick="abrirHay(${t.fila})">
-        <div><div class="tot-nombre">${esc(t.nombre)}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : "✏️ toca para poner lo que hay"}</div></div>
+        <div><div class="tot-nombre">${esc(t.nombre)}${t.proveedor ? `<span class="prov">${esc(t.proveedor)}</span>` : ""}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : "✏️ toca para poner lo que hay"}</div></div>
         <div class="tot-cant">${t.total ? cantidad(t.total, t.formato) : "0"}${dif}</div>
       </div>`;
     if (abierta) {
@@ -425,11 +449,25 @@ function pintarTotales(){
         </div>
       </div>`;
     }
-    if (despuesDe[i]) html += despuesDe[i].join("");
+    if (despuesDe[i] && filtroTot === "todos") html += despuesDe[i].join("");
   });
   cont.innerHTML = html;
 }
 
+function ponerFiltro(f){ filtroTot = f; editandoFila = null; pintarTotales(); }
+function copiarLista(){
+  const titulo = filtroTot === "faltan" ? "FALTAN" : filtroTot.slice(5);
+  const lineas = totales.filter(t => filtroTot === "faltan" ? (t.dif !== null && t.dif < 0) : t.proveedor === filtroTot.slice(5))
+    .map(t => {
+      const unidad = String(t.formato).toLowerCase() === "kg" ? " kg" : " × " + t.formato;
+      const falta = t.dif !== null && t.dif < 0 ? " (faltan " + num(-t.dif) + ")" : "";
+      return "- " + t.nombre + ": " + num(t.total) + unidad + falta;
+    });
+  const texto = titulo + "\n" + lineas.join("\n");
+  const ok = () => estado("Lista copiada: pégala en WhatsApp");
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok).catch(() => prompt("Copia la lista:", texto));
+  else prompt("Copia la lista:", texto);
+}
 function abrirHay(fila){
   editandoFila = editandoFila === fila ? null : fila;
   pintarTotales();
@@ -674,7 +712,9 @@ function agregarProducto(){
     .then(d => {
       extra = { categorias: d.categorias, productos: d.productos };
       pintarExtra(d.agregado.nombre + "|" + d.agregado.offset);
-      res.innerHTML = `<div class="obs" style="background:#f1f8f1;border-color:#cfe6cf;color:var(--primary)">✅ ${esc(d.agregado.nombre)} añadido en ${esc(d.agregado.categoria)}. Ahora marca abajo quién quiere.</div>`;
+      res.innerHTML = d.yaExistia
+        ? `<div class="obs">ℹ️ ${esc(d.agregado.nombre)} ya estaba en la lista (no se ha cambiado nada). Márcalo abajo: quién quiere y cuánto.</div>`
+        : `<div class="obs" style="background:#f1f8f1;border-color:#cfe6cf;color:var(--primary)">✅ ${esc(d.agregado.nombre)} añadido en ${esc(d.agregado.categoria)}. Ahora marca abajo quién quiere.</div>`;
       document.getElementById("ex-nombre").value = ""; document.getElementById("ex-precio").value = "";
       cargarQuien(); cargar();
     })
@@ -714,7 +754,7 @@ function ponerCantidad(i, cantidad){
   if (!p || !c) return;
   const antes = c.cantidad;
   c.cantidad = cantidad; pintarQuien();                                       // se ve al momento
-  llamar("action=ponercantidad&bloque=" + c.bloque + "&offset=" + p.offset + "&producto=" + encodeURIComponent(p.nombre) +
+  llamar("action=ponercantidad&bloque=" + c.bloque + "&offset=" + (c.offset !== undefined ? c.offset : p.offset) + "&producto=" + encodeURIComponent(p.nombre) +
          "&cantidad=" + cantidad)
     .then(d => { quien = d.clientes; pintarQuien(); estado("Guardado " + c.nombre + ": " + num(cantidad)); cargar(); })
     .catch(err => { c.cantidad = antes; pintarQuien(); estado("No se pudo guardar: " + msgError(err), true); });
