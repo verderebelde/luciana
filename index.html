@@ -206,6 +206,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
+const VERSION_PANEL = "12-oct 22:15";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -411,10 +412,15 @@ function pintarTotales(){
   const pasaFiltro = t => filtroTot === "todos" ? true
     : filtroTot === "faltan" ? (t.dif !== null && t.dif < 0)
     : t.proveedor === filtroTot.slice(5);
-  const bot = (valor, texto, extra) => `<button class="filtro ${extra || ""} ${filtroTot === valor ? "sel" : ""}" onclick="ponerFiltro('${valor.replace(/'/g, "\\'")}')">${texto}</button>`;
   const visibles = totales.filter(pasaFiltro);
-  let html = cabDinero + '<div class="filtros">' + bot("todos", "Todos") + bot("faltan", "⚠️ Faltan", "falta") +
-    proveedores.map(p => bot("prov:" + p, "🚚 " + esc(p))).join("") + "</div>";
+  const opcion = (valor, texto) => `<option value="${esc(valor)}" ${filtroTot === valor ? "selected" : ""}>${texto}</option>`;
+  let html = cabDinero +
+    '<div class="form-extra" style="grid-template-columns:1fr;margin-bottom:10px"><select class="ancho" onchange="ponerFiltro(this.value)">' +
+    opcion("todos", "📋 Todos los productos") + opcion("faltan", "⚠️ Solo los que faltan") +
+    (proveedores.length
+      ? '<optgroup label="Por proveedor (columna DK)">' + proveedores.map(p => opcion("prov:" + p, "🚚 " + esc(p))).join("") + "</optgroup>"
+      : '<option disabled>(no hay proveedores escritos en DK)</option>') +
+    "</select></div>";
   if (filtroTot !== "todos") {
     html += visibles.length
       ? `<button class="btn-sec copiar" onclick="copiarLista()">📋 Copiar esta lista (${visibles.length}) para WhatsApp</button>`
@@ -501,7 +507,8 @@ function cargar(){
       pintarPedidos();
       dinero = d.dinero === undefined ? null : d.dinero;
       if (editandoFila === null) pintarTotales();   // no se borra lo que estás escribiendo
-      estado("Actualizado " + new Date().toLocaleTimeString("es-ES") + " · se actualiza solo");
+      estado("Actualizado " + new Date().toLocaleTimeString("es-ES") + " · panel " + VERSION_PANEL +
+             " · script " + (d.version || "VIEJO ⚠️"), !d.version);
     })
     .catch(err => {
       cargando = false;
