@@ -94,6 +94,19 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .cliente-q .cn{font-weight:600;font-size:15px;margin-bottom:6px}
 .cliente-q.tiene{border-color:var(--accent);background:#f6fbf6}
 .resumen-q{font-size:14px;margin:6px 0 10px;color:var(--primary);font-weight:600}
+.dinero{background:white;border:1.5px solid var(--accent);border-radius:14px;padding:12px 16px;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
+.dinero span{font-size:13px;color:var(--muted);font-weight:600}
+.dinero b{font-size:22px;color:var(--primary)}
+.tot-fila.editable{cursor:pointer}
+.tot-fila.abierta{border-color:var(--accent);border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
+.editor-hay{background:#f6fbf6;border:1px solid var(--accent);border-top:none;border-radius:0 0 12px 12px;padding:10px 12px;margin-bottom:8px}
+.editor-hay .campos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.editor-hay label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;text-align:center}
+.editor-hay input{width:100%;font:600 17px 'Montserrat';padding:9px;text-align:center;border-radius:10px;border:1.5px solid #cfdccf;background:white}
+.editor-hay .botones{display:flex;gap:8px}
+.editor-hay button{flex:1;font:600 14px 'Montserrat';padding:10px;border-radius:10px;border:1.5px solid var(--primary)}
+.editor-hay .guardar{background:var(--primary);color:white}
+.editor-hay .cancelar{background:white;color:var(--primary)}
 </style>
 </head>
 <body>
@@ -201,6 +214,8 @@ let conocidos = null;     // ids ya vistos, para resaltar los nuevos
 let pedidos = [];         // hoja PEDIDOS
 let pasados = [];         // hoja VIEJOS
 let totales = [];         // hoja TOTALES
+let dinero = null;        // TOTALES!DH67
+let editandoFila = null;  // producto de Totales que se está editando (HAY)
 let lista8 = null;        // hoja 8 AM
 let listaMsg = null;      // hoja mensaje
 let textoGuardado = "";
@@ -362,7 +377,9 @@ function filaSuma(s, miembros){
 
 function pintarTotales(){
   const cont = document.getElementById("totales");
-  if (!totales.length) { cont.innerHTML = '<div class="vacio">No se encontraron productos en TOTALES</div>'; return; }
+  const cabDinero = dinero !== null
+    ? `<div class="dinero"><span>💶 Total de los pedidos</span><b>${Number(dinero).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</b></div>` : "";
+  if (!totales.length) { cont.innerHTML = cabDinero + '<div class="vacio">No se encontraron productos en TOTALES</div>'; return; }
 
   // qué productos entran en cada suma, y después de cuál se pinta la suma
   const grupos = SUMAS.map(s => ({ s, miembros: [] }));
@@ -380,7 +397,7 @@ function pintarTotales(){
     (despuesDe[ultimo] = despuesDe[ultimo] || []).push(filaSuma(g.s, g.miembros));
   });
 
-  let html = "", cat = null;
+  let html = cabDinero, cat = null;
   totales.forEach((t, i) => {
     if (t.categoria !== cat) { cat = t.categoria; html += `<h2>${esc(cat)}</h2>`; }
     let dif = "";
@@ -389,14 +406,49 @@ function pintarTotales(){
       else if (t.dif < 0) dif = `<div class="dif falta">faltan ${num(-t.dif)}</div>`;
       else                dif = `<div class="dif justo">justo</div>`;
     }
+    const abierta = editandoFila === t.fila;
     html += `
-      <div class="tot-fila ${t.total ? '' : 'cero'}">
-        <div><div class="tot-nombre">${esc(t.nombre)}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : ""}</div></div>
+      <div class="tot-fila editable ${t.total ? '' : 'cero'} ${abierta ? 'abierta' : ''}" onclick="abrirHay(${t.fila})">
+        <div><div class="tot-nombre">${esc(t.nombre)}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : "✏️ toca para poner lo que hay"}</div></div>
         <div class="tot-cant">${t.total ? cantidad(t.total, t.formato) : "0"}${dif}</div>
       </div>`;
+    if (abierta) {
+      html += `
+      <div class="editor-hay">
+        <label style="text-align:left;font-size:12px">Total que HAY (suma de DK + DL + DM)</label>
+        <div class="campos" style="grid-template-columns:1fr">
+          <input id="hay-total" inputmode="decimal" placeholder="vacío = sin anotar" value="${t.hay === null ? "" : String(t.hay).replace(".", ",")}">
+        </div>
+        <div class="botones">
+          <button class="cancelar" onclick="cerrarHay()">Cancelar</button>
+          <button class="guardar" id="b-hay" onclick="guardarHay(${t.fila})">💾 Guardar</button>
+        </div>
+      </div>`;
+    }
     if (despuesDe[i]) html += despuesDe[i].join("");
   });
   cont.innerHTML = html;
+}
+
+function abrirHay(fila){
+  editandoFila = editandoFila === fila ? null : fila;
+  pintarTotales();
+  const i = document.getElementById("hay-total"); if (i) { i.focus(); i.select(); }
+}
+function cerrarHay(){ editandoFila = null; pintarTotales(); }
+function guardarHay(fila){
+  const t = totales.find(x => x.fila === fila);
+  if (!t) return;
+  const total = document.getElementById("hay-total").value.trim();
+  const b = document.getElementById("b-hay"); b.disabled = true; b.textContent = "Guardando…";
+  llamar("action=ponerhay&fila=" + fila + "&producto=" + encodeURIComponent(t.nombre) +
+         "&total=" + encodeURIComponent(total))
+    .then(d => {
+      totales = d.totales || totales; dinero = d.dinero;
+      editandoFila = null; pintarTotales();
+      estado("Guardado lo que hay de " + t.nombre);
+    })
+    .catch(err => { estado("No se pudo guardar: " + msgError(err), true); b.disabled = false; b.textContent = "💾 Guardar"; });
 }
 
 function cargar(){
@@ -409,7 +461,8 @@ function cargar(){
       pasados = d.pasados || [];
       totales = d.totales || [];
       pintarPedidos();
-      pintarTotales();
+      dinero = d.dinero === undefined ? null : d.dinero;
+      if (editandoFila === null) pintarTotales();   // no se borra lo que estás escribiendo
       estado("Actualizado " + new Date().toLocaleTimeString("es-ES") + " · se actualiza solo");
     })
     .catch(err => {
