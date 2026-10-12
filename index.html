@@ -30,7 +30,7 @@ h1{margin:0;font-size:20px;color:var(--primary)}
 .punto.error{background:#e57373}
 .btn-refrescar{border:none;background:var(--primary-light);color:var(--primary);font:600 13px 'Montserrat';padding:8px 12px;border-radius:10px}
 .tabs{display:flex;gap:4px;margin-top:10px;background:#e8f0e8;padding:4px;border-radius:12px}
-.tab{flex:1;border:none;background:transparent;font:600 12.5px 'Montserrat';color:var(--muted);padding:9px 2px;border-radius:9px;white-space:nowrap}
+.tab{flex:1;border:none;background:transparent;font:600 11.5px 'Montserrat';color:var(--muted);padding:9px 2px;border-radius:9px;white-space:nowrap}
 .tab.activa{background:white;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .contadores{display:flex;gap:8px;margin-top:10px;font-size:13px;flex-wrap:wrap}
 .chip{background:white;border:1px solid #e3ece3;border-radius:20px;padding:5px 12px}
@@ -83,6 +83,17 @@ details.pasados summary::-webkit-details-marker{display:none}
 .aviso{font-size:12.5px;color:var(--muted);margin:0 0 10px}
 textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-radius:12px;border:1.5px solid #dfe9df;background:white;color:var(--text)}
 .previa{font-size:13px;background:#fffbea;border:1px solid #f0e2a3;color:#6b5b00;border-radius:10px;padding:10px 12px;margin:8px 0 12px;white-space:pre-wrap}
+.form-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.form-extra input,.form-extra select{width:100%;font:15px 'Montserrat';padding:10px;border-radius:10px;border:1.5px solid #dfe9df;background:white;color:var(--text)}
+.form-extra .ancho{grid-column:1 / -1}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.chip-c{border:1.5px solid #cfdccf;background:white;font:600 14px 'Montserrat';color:var(--text);padding:7px 0;border-radius:9px;min-width:44px}
+.chip-c.sel{background:var(--primary);border-color:var(--primary);color:white}
+.chip-c:disabled{opacity:.5}
+.cliente-q{background:white;border:1px solid #e6efe6;border-radius:12px;padding:10px 12px;margin-bottom:6px}
+.cliente-q .cn{font-weight:600;font-size:15px;margin-bottom:6px}
+.cliente-q.tiene{border-color:var(--accent);background:#f6fbf6}
+.resumen-q{font-size:14px;margin:6px 0 10px;color:var(--primary);font-weight:600}
 </style>
 </head>
 <body>
@@ -98,6 +109,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
     <button class="tab" id="tab-totales" onclick="verVista('totales')">⚖️ Totales</button>
     <button class="tab" id="tab-ochoam" onclick="verVista('ochoam')">☀️ 8 AM</button>
     <button class="tab" id="tab-mensaje" onclick="verVista('mensaje')">💬 Mensaje</button>
+    <button class="tab" id="tab-extra" onclick="verVista('extra')">➕ Extra</button>
   </div>
 </header>
 
@@ -151,6 +163,26 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
     <button class="link-btn" onclick="borrarMarcas('msg')">Borrar marcas de enviado</button>
   </div>
   <div id="listamsg"><div class="vacio">Cargando…</div></div>
+</div>
+
+<!-- ============ EXTRA (productos de última hora) ============ -->
+<div id="vista-extra" class="oculto">
+  <h2 style="margin-top:4px">1 · Añadir producto de última hora</h2>
+  <p class="aviso">Se escribe en la <b>fila vacía</b> que hay debajo del último producto de la sección, en BYS (todos los pedidos) y en TOTALES. No se añaden ni se mueven filas.</p>
+  <div class="form-extra">
+    <input id="ex-nombre" class="ancho" placeholder="Nombre (ej: JUDIAS)">
+    <input id="ex-formato" placeholder="Formato" value="kg" list="formatos">
+    <datalist id="formatos"><option value="kg"><option value="unidad"><option value="manojo"><option value="docena"><option value="1 kg"><option value="3 kg"></datalist>
+    <input id="ex-precio" placeholder="Precio € (ej: 5,90)" inputmode="decimal">
+    <select id="ex-cat" class="ancho"></select>
+  </div>
+  <button class="btn-sec" id="b-agregar" style="width:100%" onclick="agregarProducto()">➕ Añadir producto</button>
+  <div id="ex-res"></div>
+
+  <h2>2 · ¿Quién quiere?</h2>
+  <div class="form-extra"><select id="ex-prod" class="ancho" onchange="cargarQuien()"></select></div>
+  <div class="resumen-q" id="ex-resumen"></div>
+  <div id="ex-lista"><div class="vacio">Elige un producto</div></div>
 </div>
 
 <script>
@@ -207,17 +239,19 @@ function msgError(err){ return err.name === "AbortError" ? "no responde" : err.m
 /* ---------- pestañas ---------- */
 function verVista(v){
   vista = v;
-  ["pedidos","totales","ochoam","mensaje"].forEach(x => {
+  ["pedidos","totales","ochoam","mensaje","extra"].forEach(x => {
     document.getElementById("vista-" + x).classList.toggle("oculto", x !== v);
     document.getElementById("tab-" + x).classList.toggle("activa", x === v);
   });
   guardarLocal("vista", v);
   if (v === "ochoam" && lista8 === null) cargar8am();
   if (v === "mensaje" && listaMsg === null) cargarMensajes();
+  if (v === "extra" && extra === null) cargarExtra();
 }
 function refrescar(){
   if (vista === "ochoam") cargar8am();
   else if (vista === "mensaje") cargarMensajes();
+  else if (vista === "extra") cargarExtra();
   else cargar();
 }
 
@@ -541,10 +575,109 @@ function generarMensajes(){
   accionMsg("action=generarmensajes", "b-generar", "Generando…", false);
 }
 
+/* ---------- EXTRA: productos de última hora ---------- */
+let extra = null;          // {categorias, productos}
+let quien = [];            // clientes con su cantidad del producto elegido
+
+function prodSel(){
+  const v = document.getElementById("ex-prod").value;
+  return extra && extra.productos.find(p => p.nombre + "|" + p.offset === v);
+}
+function opciones(p){
+  return String(p.formato).toLowerCase() === "kg" ? [0, 0.5, 1, 1.5, 2] : [0, 1, 2, 3];
+}
+function pintarExtra(elegir){
+  const cat = document.getElementById("ex-cat");
+  const antesCat = cat.value;
+  cat.innerHTML = extra.categorias.map(c => `<option value="${esc(c)}">Debajo de la última de ${esc(c)}</option>`).join("");
+  if (antesCat) cat.value = antesCat;
+  const sel = document.getElementById("ex-prod");
+  const antes = elegir || sel.value;
+  let html = "", c0 = null;
+  extra.productos.forEach(p => {
+    if (p.categoria !== c0) { if (c0 !== null) html += "</optgroup>"; c0 = p.categoria; html += `<optgroup label="${esc(c0)}">`; }
+    html += `<option value="${esc(p.nombre + "|" + p.offset)}">${esc(p.nombre)} (${esc(p.formato)})</option>`;
+  });
+  sel.innerHTML = '<option value="">— Elige producto —</option>' + html + "</optgroup>";
+  if (antes && [...sel.options].some(o => o.value === antes)) sel.value = antes;
+}
+function cargarExtra(){
+  estado("Cargando productos de BYS…");
+  llamar("action=extrainfo")
+    .then(d => { extra = d; pintarExtra(); estado("Productos cargados " + new Date().toLocaleTimeString("es-ES")); if (prodSel()) cargarQuien(); })
+    .catch(err => estado("Error: " + msgError(err), true));
+}
+function agregarProducto(){
+  const nombre = document.getElementById("ex-nombre").value.trim().toUpperCase();
+  const formato = document.getElementById("ex-formato").value.trim() || "kg";
+  const precio = document.getElementById("ex-precio").value.trim();
+  const cat = document.getElementById("ex-cat").value;
+  if (!nombre || !precio) { alert("Pon el nombre y el precio"); return; }
+  if (!confirm("¿Escribir " + nombre + " (" + formato + ", " + precio + " €) debajo de la última de " + cat + "?\n\nSe escribe en la fila vacía de debajo, en BYS y en TOTALES.")) return;
+  const b = document.getElementById("b-agregar"); b.disabled = true; b.textContent = "⏳ Escribiendo en BYS y TOTALES…";
+  const res = document.getElementById("ex-res"); res.innerHTML = "";
+  llamar("action=agregarproducto&nombre=" + encodeURIComponent(nombre) + "&formato=" + encodeURIComponent(formato) +
+         "&precio=" + encodeURIComponent(precio) + "&categoria=" + encodeURIComponent(cat), 330)
+    .then(d => {
+      extra = { categorias: d.categorias, productos: d.productos };
+      pintarExtra(d.agregado.nombre + "|" + d.agregado.offset);
+      res.innerHTML = `<div class="obs" style="background:#f1f8f1;border-color:#cfe6cf;color:var(--primary)">✅ ${esc(d.agregado.nombre)} añadido en ${esc(d.agregado.categoria)}. Ahora marca abajo quién quiere.</div>`;
+      document.getElementById("ex-nombre").value = ""; document.getElementById("ex-precio").value = "";
+      cargarQuien(); cargar();
+    })
+    .catch(err => { res.innerHTML = '<div class="obs" style="background:#fdecea;border-color:#f5c2c0;color:#c62828">⚠️ ' + esc(msgError(err)) + '</div>'; })
+    .finally(() => { b.disabled = false; b.textContent = "➕ Añadir producto"; });
+}
+function pintarQuien(){
+  const p = prodSel();
+  const cont = document.getElementById("ex-lista");
+  if (!p) { cont.innerHTML = '<div class="vacio">Elige un producto</div>'; document.getElementById("ex-resumen").textContent = ""; return; }
+  const total = quien.reduce((s, c) => s + (c.cantidad || 0), 0);
+  const cuantos = quien.filter(c => c.cantidad > 0).length;
+  document.getElementById("ex-resumen").textContent =
+    `${p.nombre}: ${num(total)} ${String(p.formato).toLowerCase() === "kg" ? "kg" : "× " + p.formato} · ${cuantos} ${cuantos === 1 ? "cliente" : "clientes"}`;
+  if (!quien.length) { cont.innerHTML = '<div class="vacio">No hay pedidos en BYS</div>'; return; }
+  cont.innerHTML = quien.map((c, i) => {
+    const ops = opciones(p);
+    const fuera = c.cantidad > 0 && ops.indexOf(c.cantidad) === -1;
+    return `<div class="cliente-q ${c.cantidad > 0 ? 'tiene' : ''}">
+      <div class="cn">${esc(c.nombre)}</div>
+      <div class="chips">
+        ${ops.map(o => `<button class="chip-c ${c.cantidad === o ? 'sel' : ''}" onclick="ponerCantidad(${i}, ${o})">${o === 0 ? "0" : num(o)}</button>`).join("")}
+        <button class="chip-c ${fuera ? 'sel' : ''}" onclick="otraCantidad(${i})">${fuera ? num(c.cantidad) : "otra"}</button>
+      </div></div>`;
+  }).join("");
+}
+function cargarQuien(){
+  const p = prodSel();
+  if (!p) { quien = []; pintarQuien(); return; }
+  document.getElementById("ex-lista").innerHTML = '<div class="vacio">Cargando…</div>';
+  llamar("action=quienquiere&offset=" + p.offset + "&producto=" + encodeURIComponent(p.nombre))
+    .then(d => { quien = d.clientes; pintarQuien(); })
+    .catch(err => { document.getElementById("ex-lista").innerHTML = '<div class="vacio">Error: ' + esc(msgError(err)) + '</div>'; });
+}
+function ponerCantidad(i, cantidad){
+  const p = prodSel(); const c = quien[i];
+  if (!p || !c) return;
+  const antes = c.cantidad;
+  c.cantidad = cantidad; pintarQuien();                                       // se ve al momento
+  llamar("action=ponercantidad&bloque=" + c.bloque + "&offset=" + p.offset + "&producto=" + encodeURIComponent(p.nombre) +
+         "&cantidad=" + cantidad)
+    .then(d => { quien = d.clientes; pintarQuien(); estado("Guardado " + c.nombre + ": " + num(cantidad)); cargar(); })
+    .catch(err => { c.cantidad = antes; pintarQuien(); estado("No se pudo guardar: " + msgError(err), true); });
+}
+function otraCantidad(i){
+  const v = prompt("Cantidad para " + quien[i].nombre + ":", quien[i].cantidad || "");
+  if (v === null) return;
+  const n = parseFloat(String(v).replace(",", "."));
+  if (isNaN(n) || n < 0) { alert("Cantidad no válida"); return; }
+  ponerCantidad(i, n);
+}
+
 /* ---------- arranque ---------- */
 const vistaGuardada = leerLocal("vista", "pedidos");
 cargar();
-verVista(["pedidos","totales","ochoam","mensaje"].indexOf(vistaGuardada) !== -1 ? vistaGuardada : "pedidos");
+verVista(["pedidos","totales","ochoam","mensaje","extra"].indexOf(vistaGuardada) !== -1 ? vistaGuardada : "pedidos");
 setInterval(() => { if (!document.hidden) cargar(); }, CADA_SEGUNDOS * 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) cargar(); });
 </script>
