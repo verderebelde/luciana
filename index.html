@@ -116,6 +116,11 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .copiar{width:100%;margin:0 0 10px}
 .btn-quitar{border:none;background:#fdecea;color:#c62828;font:700 16px 'Montserrat';width:38px;height:38px;border-radius:10px;flex:none}
 .persona .derecha{display:flex;gap:8px;align-items:center}
+.filtros-fila{display:grid;grid-template-columns:auto auto 1fr;gap:6px;margin:0 0 10px;align-items:center}
+.sel-prov{font:600 13px 'Montserrat';padding:8px 10px;border-radius:20px;border:1.5px solid #cfdccf;background:white;color:var(--text);min-width:0}
+.sel-prov.sel{background:var(--primary);border-color:var(--primary);color:white}
+.botones-lista{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin:0 0 10px}
+.btn-wa-lista{border:none;background:#25d366;color:white;font:700 14px 'Montserrat';padding:11px;border-radius:10px}
 </style>
 </head>
 <body>
@@ -123,7 +128,6 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 <header>
   <div class="top">
     <div class="marca"><img src="data:image/png;base64,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" alt=""><h1>Pedidos</h1></div>
-    <button class="btn-refrescar" onclick="refrescar()">↻ Actualizar</button>
   </div>
   <div class="estado"><span class="punto" id="punto"></span><span id="estado">Cargando…</span></div>
   <div class="tabs">
@@ -208,7 +212,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "13-oct 06:30";
+const VERSION_PANEL = "13-oct 07:45";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -415,17 +419,23 @@ function pintarTotales(){
     : filtroTot === "faltan" ? (t.dif !== null && t.dif < 0)
     : t.proveedor === filtroTot.slice(5);
   const visibles = totales.filter(pasaFiltro);
+  const esProv = filtroTot.startsWith("prov:");
   const opcion = (valor, texto) => `<option value="${esc(valor)}" ${filtroTot === valor ? "selected" : ""}>${texto}</option>`;
   let html = cabDinero +
-    '<div class="form-extra" style="grid-template-columns:1fr;margin-bottom:10px"><select class="ancho" onchange="ponerFiltro(this.value)">' +
-    opcion("todos", "📋 Todos los productos") + opcion("faltan", "⚠️ Solo los que faltan") +
-    (proveedores.length
-      ? '<optgroup label="Por proveedor (columna DQ)">' + proveedores.map(p => opcion("prov:" + p, "🚚 " + esc(p))).join("") + "</optgroup>"
-      : '<option disabled>(no hay proveedores escritos en DQ)</option>') +
-    "</select></div>";
+    '<div class="filtros-fila">' +
+      `<button class="filtro ${filtroTot === "todos" ? "sel" : ""}" onclick="ponerFiltro('todos')">Todos</button>` +
+      `<button class="filtro falta ${filtroTot === "faltan" ? "sel" : ""}" onclick="ponerFiltro('faltan')">⚠️ Faltan</button>` +
+      `<select class="sel-prov ${esProv ? "sel" : ""}" onchange="ponerFiltro(this.value || 'todos')">` +
+        `<option value="">🚚 Proveedor…</option>` +
+        (proveedores.length ? proveedores.map(p => opcion("prov:" + p, esc(p))).join("") : '<option disabled>(sin proveedores)</option>') +
+      "</select>" +
+    "</div>";
   if (filtroTot !== "todos") {
     html += visibles.length
-      ? `<button class="btn-sec copiar" onclick="copiarLista()">📋 Copiar esta lista (${visibles.length}) para WhatsApp</button>`
+      ? `<div class="botones-lista">
+           <button class="btn-wa-lista" onclick="enviarListaWhatsApp()">📲 Enviar por WhatsApp</button>
+           <button class="btn-sec" onclick="copiarLista()">📋 Copiar</button>
+         </div>`
       : '<div class="vacio">No hay productos en esta lista</div>';
   }
   let cat = null;
@@ -463,6 +473,19 @@ function pintarTotales(){
 }
 
 function ponerFiltro(f){ filtroTot = f; editandoFila = null; pintarTotales(); }
+function textoLista(){
+  const titulo = filtroTot === "faltan" ? "FALTAN" : filtroTot.slice(5);
+  const lineas = totales.filter(t => filtroTot === "faltan" ? (t.dif !== null && t.dif < 0) : t.proveedor === filtroTot.slice(5))
+    .map(t => {
+      const unidad = String(t.formato).toLowerCase() === "kg" ? " kg" : " × " + t.formato;
+      const falta = t.dif !== null && t.dif < 0 ? " (faltan " + num(-t.dif) + ")" : "";
+      return "- " + t.nombre + ": " + num(t.total) + unidad + falta;
+    });
+  return titulo + "\n" + lineas.join("\n");
+}
+function enviarListaWhatsApp(){
+  window.open("https://wa.me/?text=" + encodeURIComponent(textoLista()), "_blank");
+}
 function copiarLista(){
   const titulo = filtroTot === "faltan" ? "FALTAN" : filtroTot.slice(5);
   const lineas = totales.filter(t => filtroTot === "faltan" ? (t.dif !== null && t.dif < 0) : t.proveedor === filtroTot.slice(5))
