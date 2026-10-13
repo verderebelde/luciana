@@ -114,6 +114,8 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .filtro.falta.sel{background:#c62828;border-color:#c62828;color:white}
 .prov{display:inline-block;font-size:10.5px;font-weight:700;color:#5d4037;background:#efebe9;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
 .copiar{width:100%;margin:0 0 10px}
+.btn-quitar{border:none;background:#fdecea;color:#c62828;font:700 16px 'Montserrat';width:38px;height:38px;border-radius:10px;flex:none}
+.persona .derecha{display:flex;gap:8px;align-items:center}
 </style>
 </head>
 <body>
@@ -206,7 +208,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "12-oct 22:25";
+const VERSION_PANEL = "13-oct 06:30";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -580,7 +582,10 @@ function filaPersona(tipo, p, texto){
   return `
     <div class="persona ${enviado ? 'enviado' : ''}">
       <div><div class="pn">${esc(nombre)}</div><div class="pm">${p.movil}${extra}${enviado ? " · ✓ enviado" : ""}</div></div>
-      <a class="btn-enviar" href="${wa(p.movil, p.prefijo, texto)}" onclick="marcar('${tipo}','${p.movil}')">👉 ENVIAR</a>
+      <div class="derecha">
+        <a class="btn-enviar" href="${wa(p.movil, p.prefijo, texto)}" onclick="marcar('${tipo}','${p.movil}')">👉 ENVIAR</a>
+        ${tipo === "8am" ? `<button class="btn-quitar" title="Quitar de la lista" onclick="quitar8am(${p.fila}, '${p.movil}')">✕</button>` : ""}
+      </div>
     </div>`;
 }
 
@@ -612,6 +617,16 @@ function cargar8am(){
     .then(d => { lista8 = d.lista; pintar8am(); estado("Hoja 8 AM cargada " + new Date().toLocaleTimeString("es-ES")); })
     .catch(err => { estado("Error en 8 AM: " + msgError(err), true);
       document.getElementById("lista8am").innerHTML = '<div class="vacio">No se pudo cargar.<br><small>' + esc(err.message) + '</small></div>'; });
+}
+function quitar8am(fila, movil){
+  const p0 = (lista8 || []).find(p => p.fila === fila && p.movil === movil);
+  const nombre = p0 ? (p0.nombre || p0.movil) : movil;
+  if (!confirm("¿Quitar a " + nombre + " de la lista de 8 AM?\n\nSe borra su fila de la hoja 8 AM.")) return;
+  const antes = lista8;
+  lista8 = lista8.filter(p => !(p.fila === fila && p.movil === movil)); pintar8am();     // se quita al momento
+  llamar("action=borrar8am&fila=" + fila + "&movil=" + encodeURIComponent(movil))
+    .then(d => { lista8 = d.lista; pintar8am(); estado(nombre + " quitado de 8 AM"); })
+    .catch(err => { lista8 = antes; pintar8am(); estado("No se pudo quitar: " + msgError(err), true); });
 }
 function limpiar8am(){
   if (!confirm("Esto hace lo mismo que escribir en E1 de la hoja 8 AM: borra de la lista a los que ya están en BYS (y sus parejas). ¿Seguir?")) return;
