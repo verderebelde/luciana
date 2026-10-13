@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<base target="_blank">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pedidos VR</title>
+<title>Verde Rebelde · Totales</title>
 <meta name="theme-color" content="#2e7d32">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1p5CySNTWSX8fl02aYOr1VVRlTWLSZI-e">
+<link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1p5CySNTWSX8fl02aYOr1VVRlTWLSZI-e=s180-c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Pedidos VR">
+<meta name="apple-mobile-web-app-title" content="Verde Rebelde">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -23,14 +22,14 @@ body{margin:0;font-family:'Montserrat',sans-serif;background:var(--bg);color:var
 header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid #e3ece3;margin-bottom:12px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .marca{display:flex;align-items:center;gap:10px}
-.marca img{height:38px;width:38px;border-radius:9px}
+.marca img{height:38px;width:38px;border-radius:9px;object-fit:contain;background:white}
 h1{margin:0;font-size:20px;color:var(--primary)}
 .estado{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:4px}
 .punto{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
 .punto.error{background:#e57373}
 .btn-refrescar{border:none;background:var(--primary-light);color:var(--primary);font:600 13px 'Montserrat';padding:8px 12px;border-radius:10px}
 .tabs{display:flex;gap:4px;margin-top:10px;background:#e8f0e8;padding:4px;border-radius:12px}
-.tab{flex:1;border:none;background:transparent;font:600 11.5px 'Montserrat';color:var(--muted);padding:9px 2px;border-radius:9px;white-space:nowrap}
+.tab{flex:1;border:none;background:transparent;font:600 12.5px 'Montserrat';color:var(--muted);padding:9px 2px;border-radius:9px;white-space:nowrap}
 .tab.activa{background:white;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .contadores{display:flex;gap:8px;margin-top:10px;font-size:13px;flex-wrap:wrap}
 .chip{background:white;border:1px solid #e3ece3;border-radius:20px;padding:5px 12px}
@@ -83,161 +82,59 @@ details.pasados summary::-webkit-details-marker{display:none}
 .aviso{font-size:12.5px;color:var(--muted);margin:0 0 10px}
 textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-radius:12px;border:1.5px solid #dfe9df;background:white;color:var(--text)}
 .previa{font-size:13px;background:#fffbea;border:1px solid #f0e2a3;color:#6b5b00;border-radius:10px;padding:10px 12px;margin:8px 0 12px;white-space:pre-wrap}
-.form-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.form-extra input,.form-extra select{width:100%;font:15px 'Montserrat';padding:10px;border-radius:10px;border:1.5px solid #dfe9df;background:white;color:var(--text)}
-.form-extra .ancho{grid-column:1 / -1}
-.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.chip-c{border:1.5px solid #cfdccf;background:white;font:600 14px 'Montserrat';color:var(--text);padding:7px 0;border-radius:9px;min-width:44px}
-.chip-c.sel{background:var(--primary);border-color:var(--primary);color:white}
-.chip-c:disabled{opacity:.5}
-.cliente-q{background:white;border:1px solid #e6efe6;border-radius:12px;padding:10px 12px;margin-bottom:6px}
-.cliente-q .cn{font-weight:600;font-size:15px;margin-bottom:6px}
-.cliente-q.tiene{border-color:var(--accent);background:#f6fbf6}
-.resumen-q{font-size:14px;margin:6px 0 10px;color:var(--primary);font-weight:600}
-.dinero{background:white;border:1.5px solid var(--accent);border-radius:14px;padding:12px 16px;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
-.dinero span{font-size:13px;color:var(--muted);font-weight:600}
-.dinero b{font-size:22px;color:var(--primary)}
-.tot-fila.editable{cursor:pointer}
-.tot-fila.abierta{border-color:var(--accent);border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
-.editor-hay{background:#f6fbf6;border:1px solid var(--accent);border-top:none;border-radius:0 0 12px 12px;padding:10px 12px;margin-bottom:8px}
-.editor-hay .campos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
-.editor-hay label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;text-align:center}
-.editor-hay input{width:100%;font:600 17px 'Montserrat';padding:9px;text-align:center;border-radius:10px;border:1.5px solid #cfdccf;background:white}
-.editor-hay .botones{display:flex;gap:8px}
-.editor-hay button{flex:1;font:600 14px 'Montserrat';padding:10px;border-radius:10px;border:1.5px solid var(--primary)}
-.editor-hay .guardar{background:var(--primary);color:white}
-.editor-hay .cancelar{background:white;color:var(--primary)}
-.filtros{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
-.filtro{border:1.5px solid #cfdccf;background:white;font:600 12.5px 'Montserrat';color:var(--text);padding:7px 11px;border-radius:20px}
-.filtro.sel{background:var(--primary);border-color:var(--primary);color:white}
-.filtro.falta{border-color:#f5c2c0;color:#c62828}
-.filtro.falta.sel{background:#c62828;border-color:#c62828;color:white}
-.prov{display:inline-block;font-size:10.5px;font-weight:700;color:#5d4037;background:#efebe9;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
-.copiar{width:100%;margin:0 0 10px}
-.btn-quitar{border:none;background:#fdecea;color:#c62828;font:700 16px 'Montserrat';width:38px;height:38px;border-radius:10px;flex:none}
-.persona .derecha{display:flex;gap:8px;align-items:center}
-.filtros-fila{display:grid;grid-template-columns:auto auto 1fr;gap:6px;margin:0 0 10px;align-items:center}
-.sel-prov{font:600 13px 'Montserrat';padding:8px 10px;border-radius:20px;border:1.5px solid #cfdccf;background:white;color:var(--text);min-width:0}
-.sel-prov.sel{background:var(--primary);border-color:var(--primary);color:white}
-.botones-lista{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin:0 0 10px}
-.btn-wa-lista{border:none;background:#25d366;color:white;font:700 14px 'Montserrat';padding:11px;border-radius:10px}
+
+.buscar{width:100%;font:15px 'Montserrat';padding:10px 12px;border-radius:12px;border:1.5px solid #dfe9df;background:white;margin:0 0 12px}
+.ped{background:white;border:1px solid #e6efe6;border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.ped-cab{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:2px solid var(--text);padding-bottom:4px;margin-bottom:4px}
+.ped-nombre{font-weight:700;font-size:17px}
+.ped-total{font-weight:700;color:var(--primary);white-space:nowrap}
+.ped-notas{font-size:12.5px;font-style:italic;color:#6b5b00;margin:4px 0}
+.linea{display:grid;grid-template-columns:1fr auto 52px 64px;gap:8px;align-items:center;font-size:13.5px;padding:5px 0;border-bottom:1px solid #eef2ee}
+.linea:last-child{border-bottom:none}
+.l-prod{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.l-fmt{font-size:11.5px;color:var(--muted);text-align:center}
+.l-cant{font-weight:700;font-size:16px;text-align:center}
+.l-tot{text-align:right;font-size:12.5px;color:var(--muted)}
+.btn-cerrar{border:none;background:#eef2ee;color:#555;font:700 20px 'Montserrat';width:42px;height:42px;border-radius:50%}
+.aviso-cerrar{position:fixed;left:14px;right:14px;bottom:20px;background:#333;color:white;font-size:14px;padding:12px 14px;border-radius:12px;z-index:20;text-align:center}
+.ped.pend{border-color:#ffcc80;background:#fffaf2}
+.etq-pend{font-size:11px;font-weight:700;color:#e65100;background:#fff3e0;border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:middle}
+.sec-ped{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin:14px 0 8px;font-weight:700}
+.linea.tachada .l-prod,.linea.tachada .l-cant,.linea.tachada .l-tot,.linea.tachada .l-fmt{text-decoration:line-through;color:#9e9e9e}
+.nota-nohay{font-size:11px;color:#c62828;font-style:italic;text-decoration:none;margin-left:6px}
 </style>
 </head>
 <body>
 
 <header>
   <div class="top">
-    <div class="marca"><img src="data:image/png;base64,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" alt=""><h1>Pedidos</h1></div>
+    <div class="marca"><img src="https://lh3.googleusercontent.com/d/1p5CySNTWSX8fl02aYOr1VVRlTWLSZI-e" alt="Verde Rebelde"><h1>Totales</h1></div>
+    <button class="btn-cerrar" onclick="cerrarApp()" title="Cerrar">✕</button>
   </div>
   <div class="estado"><span class="punto" id="punto"></span><span id="estado">Cargando…</span></div>
   <div class="tabs">
-    <button class="tab activa" id="tab-pedidos" onclick="verVista('pedidos')">📋 Pedidos</button>
-    <button class="tab" id="tab-totales" onclick="verVista('totales')">⚖️ Totales</button>
-    <button class="tab" id="tab-ochoam" onclick="verVista('ochoam')">☀️ 8 AM</button>
-    <button class="tab" id="tab-mensaje" onclick="verVista('mensaje')">💬 Mensaje</button>
-    <button class="tab" id="tab-extra" onclick="verVista('extra')">➕ Extra</button>
+    <button class="tab activa" id="tab-totales" onclick="verVista('totales')">⚖️ Totales</button>
+    <button class="tab" id="tab-pedidos" onclick="verVista('pedidos')">📦 Pedidos <span id="n-ped"></span></button>
   </div>
 </header>
 
-<!-- ============ PEDIDOS ============ -->
-<div id="vista-pedidos">
-  <div class="contadores" style="margin:0 0 12px">
-    <div class="chip">Por confirmar: <b id="n-pend">–</b></div>
-    <div class="chip">Pasados (VIEJOS): <b id="n-ok">–</b></div>
-  </div>
-  <button class="btn-sec" id="b-excel" style="width:100%;margin-bottom:10px" onclick="generarExcel()">📄 Generar Excel de lo pedido (BYS)</button>
-  <div id="excel-res"></div>
-  <div id="pendientes"><div class="vacio">Cargando…</div></div>
-  <details class="pasados" id="pasados-wrap">
-    <summary><h2>Pasados a BYS · hoja VIEJOS (<span id="n-ok2">0</span>) ▾</h2></summary>
-    <div id="pasados"></div>
-  </details>
-</div>
-
-<!-- ============ TOTALES ============ -->
-<div id="vista-totales" class="oculto">
+<div id="vista-totales">
   <div id="totales"><div class="vacio">Cargando…</div></div>
 </div>
 
-<!-- ============ 8 AM ============ -->
-<div id="vista-ochoam" class="oculto">
-  <p class="aviso">Mensaje: <i>“Buen día <b>Nombre</b>! ¿quieres hacer pedido esta semana?”</i></p>
-  <div class="acciones">
-    <button class="btn-sec" id="b-limpiar" onclick="limpiar8am()">🧹 Quitar los que ya pidieron</button>
-    <button class="btn-sec" id="b-copiar" onclick="copiar8am()">📥 Cargar lista desde MASTER</button>
-  </div>
-  <div class="contadores" style="margin-top:0;margin-bottom:10px">
-    <div class="chip">En la lista: <b id="n8-total">–</b></div>
-    <div class="chip">Enviados: <b id="n8-env">0</b></div>
-    <button class="link-btn" onclick="borrarMarcas('8am')">Borrar marcas de enviado</button>
-  </div>
-  <div id="lista8am"><div class="vacio">Cargando…</div></div>
-</div>
-
-<!-- ============ MENSAJE ============ -->
-<div id="vista-mensaje" class="oculto">
-  <p class="aviso">Texto del mensaje (es la celda E1 de la hoja <b>mensaje</b>). Se envía como: <i>“Hola <b>Nombre</b>, …”</i></p>
-  <textarea id="texto-msg" placeholder="Escribe aquí el mensaje…" oninput="previaMsg()"></textarea>
-  <div class="previa" id="previa-msg"></div>
-  <div class="acciones">
-    <button class="btn-sec" id="b-guardar" onclick="guardarMensaje()">💾 Guardar mensaje</button>
-    <button class="btn-sec" id="b-generar" onclick="generarMensajes()">🔄 Generar lista (de BYS)</button>
-  </div>
-  <div class="contadores" style="margin-top:0;margin-bottom:10px">
-    <div class="chip">En la lista: <b id="nm-total">–</b></div>
-    <div class="chip">Enviados: <b id="nm-env">0</b></div>
-    <button class="link-btn" onclick="borrarMarcas('msg')">Borrar marcas de enviado</button>
-  </div>
-  <div id="listamsg"><div class="vacio">Cargando…</div></div>
-</div>
-
-<!-- ============ EXTRA (productos de última hora) ============ -->
-<div id="vista-extra" class="oculto">
-  <h2 style="margin-top:4px">1 · Añadir producto de última hora</h2>
-  <p class="aviso">Se escribe en la <b>fila vacía</b> que hay debajo del último producto de la sección, en BYS (todos los pedidos) y en TOTALES. No se añaden ni se mueven filas.</p>
-  <div class="form-extra">
-    <input id="ex-nombre" class="ancho" placeholder="Nombre (ej: JUDIAS)">
-    <input id="ex-formato" placeholder="Formato" value="kg" list="formatos">
-    <datalist id="formatos"><option value="kg"><option value="unidad"><option value="manojo"><option value="docena"><option value="1 kg"><option value="3 kg"></datalist>
-    <input id="ex-precio" placeholder="Precio € (ej: 5,90)" inputmode="decimal">
-    <select id="ex-cat" class="ancho"></select>
-  </div>
-  <button class="btn-sec" id="b-agregar" style="width:100%" onclick="agregarProducto()">➕ Añadir producto</button>
-  <div id="ex-res"></div>
-
-  <h2>2 · ¿Quién quiere?</h2>
-  <div class="form-extra"><select id="ex-prod" class="ancho" onchange="cargarQuien()"></select></div>
-  <div class="resumen-q" id="ex-resumen"></div>
-  <div id="ex-lista"><div class="vacio">Elige un producto</div></div>
+<div id="vista-pedidos" class="oculto">
+  <input class="buscar" id="buscar" placeholder="🔍 Buscar cliente o producto…" oninput="pintarPedidos()">
+  <div id="pedidos"><div class="vacio">Cargando…</div></div>
 </div>
 
 <script>
-const VERSION_PANEL = "13-oct 07:45";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
-const CADA_SEGUNDOS = 15;
-
-// Clientes que tienen WhatsApp en OTRO número (por ejemplo extranjero).
-// A la izquierda: el móvil que ponen en el pedido. A la derecha: su WhatsApp,
-// con el prefijo del país delante (sin + ni espacios).
-const WHATSAPP_DISTINTO = {
-  "634541650": "32495124682"   // Charlotte → +32 495 12 46 82
-};
-
-let vista = "pedidos";
-let conocidos = null;     // ids ya vistos, para resaltar los nuevos
-let pedidos = [];         // hoja PEDIDOS
-let pasados = [];         // hoja VIEJOS
-let totales = [];         // hoja TOTALES
-let dinero = null;        // TOTALES!DH67
-let editandoFila = null;  // producto de Totales que se está editando (HAY)
-let filtroTot = "todos";  // "todos" | "faltan" | "prov:NOMBRE"
-let lista8 = null;        // hoja 8 AM
-let listaMsg = null;      // hoja mensaje
-let textoGuardado = "";
-let enviando = {};        // id -> "enviando" | "error"
+const CADA_SEGUNDOS = 30;
+let totales = [];
+let pedidosBys = [];
+let pendientes = [];      // pedidos de la hoja PEDIDOS, aún sin confirmar
 let cargando = false;
 
-/* ---------- utilidades ---------- */
 function esc(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -245,16 +142,6 @@ function num(n){ return String(Math.round(n * 100) / 100).replace(".", ","); }
 function cantidad(n, formato){
   return formato.toLowerCase() === "kg" ? num(n) + " kg" : num(n) + " × " + esc(formato || "ud");
 }
-function wa(movil, prefijo, texto){
-  const numero = WHATSAPP_DISTINTO[movil] || ((prefijo || "34") + movil);
-  return "https://wa.me/" + numero + "?text=" + encodeURIComponent(texto);
-}
-function estado(texto, error){
-  document.getElementById("estado").textContent = texto;
-  document.getElementById("punto").classList.toggle("error", !!error);
-}
-function guardarLocal(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
-function leerLocal(k, def){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
 
 function llamar(params, segundos){
   const ctrl = new AbortController();
@@ -266,73 +153,17 @@ function llamar(params, segundos){
 }
 function msgError(err){ return err.name === "AbortError" ? "no responde" : err.message; }
 
-/* ---------- pestañas ---------- */
+function estado(texto, error){
+  document.getElementById("estado").textContent = texto;
+  document.getElementById("punto").classList.toggle("error", !!error);
+}
+
 function verVista(v){
-  vista = v;
-  ["pedidos","totales","ochoam","mensaje","extra"].forEach(x => {
+  ["totales","pedidos"].forEach(x => {
     document.getElementById("vista-" + x).classList.toggle("oculto", x !== v);
     document.getElementById("tab-" + x).classList.toggle("activa", x === v);
   });
-  guardarLocal("vista", v);
-  if (v === "ochoam" && lista8 === null) cargar8am();
-  if (v === "mensaje" && listaMsg === null) cargarMensajes();
-  if (v === "extra" && extra === null) cargarExtra();
-}
-function refrescar(){
-  if (vista === "ochoam") cargar8am();
-  else if (vista === "mensaje") cargarMensajes();
-  else if (vista === "extra") cargarExtra();
-  else cargar();
-}
-
-/* ---------- PEDIDOS ---------- */
-function textoConfirmacion(p){
-  return "Hola " + p.nombre + ", te confirmamos que hemos recibido el siguiente pedido:\n" +
-    p.pedido + "\n\nMuchas gracias\nNos vemos\n\nDabiz y Luciana\nVerde Rebelde";
-}
-
-function tarjeta(p, nuevo, esPasado){
-  const obs = p.observaciones ? `<div class="obs">📝 ${esc(p.observaciones)}</div>` : "";
-  const otroWa = WHATSAPP_DISTINTO[p.movil]
-    ? `<div class="meta" style="margin:8px 0 0">📱 La confirmación va a su WhatsApp +${WHATSAPP_DISTINTO[p.movil]}</div>` : "";
-  let pie;
-  if (esPasado) {
-    pie = `<div class="ok-row"><span>✓ En BYS</span>
-             <a class="link-btn" href="${wa(p.movil, "34", textoConfirmacion(p))}">reenviar confirmación</a></div>`;
-  } else if (enviando[p.id] === "enviando") {
-    pie = `<div class="ok-row"><span>⏳ Pasando a BYS…</span></div>`;
-  } else if (enviando[p.id] === "error") {
-    pie = `<div class="ok-row"><span style="color:#c62828">⚠️ No se pudo pasar a BYS</span>
-             <button class="link-btn" onclick="confirmar('${p.id}')">Reintentar</button></div>`;
-  } else {
-    pie = `<a class="btn-wa" href="${wa(p.movil, "34", textoConfirmacion(p))}" onclick="confirmar('${p.id}')">🟢 ENVIAR CONFIRMACIÓN</a>`;
-  }
-  return `
-    <div class="card ${esPasado ? 'ok' : ''} ${nuevo ? 'nuevo' : ''}">
-      <div class="fila1"><span class="nombre">${esc(p.nombre)}</span><span class="total">${esc(p.total)}</span></div>
-      <div class="meta">${esc(p.hora)} · <a href="tel:${p.movil}">${p.movil}</a></div>
-      <pre class="items">${esc(String(p.pedido).trim())}</pre>
-      ${obs}${otroWa}${pie}
-    </div>`;
-}
-
-function pintarPedidos(){
-  const pend = pedidos.slice().sort((a,b) => b.ts - a.ts);
-  const pas  = pasados.slice().sort((a,b) => b.ts - a.ts);
-  const nuevos = new Set();
-  if (conocidos) pedidos.forEach(p => { if (!conocidos.has(p.id)) nuevos.add(p.id); });
-
-  document.getElementById("pendientes").innerHTML =
-    pend.length ? pend.map(p => tarjeta(p, nuevos.has(p.id), false)).join("") : `<div class="vacio">No hay pedidos por confirmar 👌</div>`;
-  document.getElementById("pasados").innerHTML =
-    pas.length ? pas.map(p => tarjeta(p, false, true)).join("") : `<div class="vacio">La hoja VIEJOS está vacía</div>`;
-
-  document.getElementById("n-pend").textContent = pend.length;
-  document.getElementById("n-ok").textContent = pas.length;
-  document.getElementById("n-ok2").textContent = pas.length;
-
-  if (nuevos.size && navigator.vibrate) navigator.vibrate([150, 80, 150]);
-  conocidos = new Set(pedidos.map(p => p.id));
+  document.querySelector("h1").textContent = v === "totales" ? "Totales" : "Pedidos";
 }
 
 // ---- Sumas de productos que se piden en distintos formatos ----
@@ -392,9 +223,7 @@ function filaSuma(s, miembros){
 
 function pintarTotales(){
   const cont = document.getElementById("totales");
-  const cabDinero = dinero !== null
-    ? `<div class="dinero"><span>💶 Total de los pedidos</span><b>${Number(dinero).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</b></div>` : "";
-  if (!totales.length) { cont.innerHTML = cabDinero + '<div class="vacio">No se encontraron productos en TOTALES</div>'; return; }
+  if (!totales.length) { cont.innerHTML = '<div class="vacio">No se encontraron productos en TOTALES</div>'; return; }
 
   // qué productos entran en cada suma, y después de cuál se pinta la suma
   const grupos = SUMAS.map(s => ({ s, miembros: [] }));
@@ -412,35 +241,8 @@ function pintarTotales(){
     (despuesDe[ultimo] = despuesDe[ultimo] || []).push(filaSuma(g.s, g.miembros));
   });
 
-  // Filtros: Todos · Faltan · un botón por proveedor (texto de la columna DK)
-  const proveedores = [...new Set(totales.map(t => t.proveedor).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
-  if (filtroTot.startsWith("prov:") && proveedores.indexOf(filtroTot.slice(5)) === -1) filtroTot = "todos";
-  const pasaFiltro = t => filtroTot === "todos" ? true
-    : filtroTot === "faltan" ? (t.dif !== null && t.dif < 0)
-    : t.proveedor === filtroTot.slice(5);
-  const visibles = totales.filter(pasaFiltro);
-  const esProv = filtroTot.startsWith("prov:");
-  const opcion = (valor, texto) => `<option value="${esc(valor)}" ${filtroTot === valor ? "selected" : ""}>${texto}</option>`;
-  let html = cabDinero +
-    '<div class="filtros-fila">' +
-      `<button class="filtro ${filtroTot === "todos" ? "sel" : ""}" onclick="ponerFiltro('todos')">Todos</button>` +
-      `<button class="filtro falta ${filtroTot === "faltan" ? "sel" : ""}" onclick="ponerFiltro('faltan')">⚠️ Faltan</button>` +
-      `<select class="sel-prov ${esProv ? "sel" : ""}" onchange="ponerFiltro(this.value || 'todos')">` +
-        `<option value="">🚚 Proveedor…</option>` +
-        (proveedores.length ? proveedores.map(p => opcion("prov:" + p, esc(p))).join("") : '<option disabled>(sin proveedores)</option>') +
-      "</select>" +
-    "</div>";
-  if (filtroTot !== "todos") {
-    html += visibles.length
-      ? `<div class="botones-lista">
-           <button class="btn-wa-lista" onclick="enviarListaWhatsApp()">📲 Enviar por WhatsApp</button>
-           <button class="btn-sec" onclick="copiarLista()">📋 Copiar</button>
-         </div>`
-      : '<div class="vacio">No hay productos en esta lista</div>';
-  }
-  let cat = null;
+  let html = "", cat = null;
   totales.forEach((t, i) => {
-    if (!pasaFiltro(t)) return;
     if (t.categoria !== cat) { cat = t.categoria; html += `<h2>${esc(cat)}</h2>`; }
     let dif = "";
     if (t.dif !== null) {
@@ -448,374 +250,107 @@ function pintarTotales(){
       else if (t.dif < 0) dif = `<div class="dif falta">faltan ${num(-t.dif)}</div>`;
       else                dif = `<div class="dif justo">justo</div>`;
     }
-    const abierta = editandoFila === t.fila;
     html += `
-      <div class="tot-fila editable ${t.total ? '' : 'cero'} ${abierta ? 'abierta' : ''}" onclick="abrirHay(${t.fila})">
-        <div><div class="tot-nombre">${esc(t.nombre)}${t.proveedor ? `<span class="prov">${esc(t.proveedor)}</span>` : ""}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : "✏️ toca para poner lo que hay"}</div></div>
+      <div class="tot-fila ${t.total ? '' : 'cero'}">
+        <div><div class="tot-nombre">${esc(t.nombre)}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : ""}</div></div>
         <div class="tot-cant">${t.total ? cantidad(t.total, t.formato) : "0"}${dif}</div>
       </div>`;
-    if (abierta) {
-      html += `
-      <div class="editor-hay">
-        <label style="text-align:left;font-size:12px">Total que HAY (suma de DK + DL + DM)</label>
-        <div class="campos" style="grid-template-columns:1fr">
-          <input id="hay-total" inputmode="decimal" placeholder="vacío = sin anotar" value="${t.hay === null ? "" : String(t.hay).replace(".", ",")}">
-        </div>
-        <div class="botones">
-          <button class="cancelar" onclick="cerrarHay()">Cancelar</button>
-          <button class="guardar" id="b-hay" onclick="guardarHay(${t.fila})">💾 Guardar</button>
-        </div>
-      </div>`;
-    }
-    if (despuesDe[i] && filtroTot === "todos") html += despuesDe[i].join("");
+    if (despuesDe[i]) html += despuesDe[i].join("");
   });
   cont.innerHTML = html;
 }
 
-function ponerFiltro(f){ filtroTot = f; editandoFila = null; pintarTotales(); }
-function textoLista(){
-  const titulo = filtroTot === "faltan" ? "FALTAN" : filtroTot.slice(5);
-  const lineas = totales.filter(t => filtroTot === "faltan" ? (t.dif !== null && t.dif < 0) : t.proveedor === filtroTot.slice(5))
-    .map(t => {
-      const unidad = String(t.formato).toLowerCase() === "kg" ? " kg" : " × " + t.formato;
-      const falta = t.dif !== null && t.dif < 0 ? " (faltan " + num(-t.dif) + ")" : "";
-      return "- " + t.nombre + ": " + num(t.total) + unidad + falta;
-    });
-  return titulo + "\n" + lineas.join("\n");
+
+/* ---------- PEDIDOS tal como están en BYS ---------- */
+// Líneas "1.5 x PRODUCTO - €3.00" del texto de un pedido sin confirmar
+function itemsDeTexto(texto){
+  return String(texto || "").split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+    const m = l.match(/^([\d.,]+)\s*x\s+(.*?)(?:\s+-\s+€\s*([\d.,]+))?$/);
+    if (!m) return { producto: l, formato: "", cantidad: "", importe: null };
+    return { producto: m[2], formato: "", cantidad: parseFloat(m[1].replace(",", ".")),
+             importe: m[3] ? parseFloat(m[3].replace(",", ".")) : null };
+  });
 }
-function enviarListaWhatsApp(){
-  window.open("https://wa.me/?text=" + encodeURIComponent(textoLista()), "_blank");
+
+function tarjetaPedido(nombre, total, notas, lineas, pendiente){
+  return `
+    <div class="ped ${pendiente ? "pend" : ""}">
+      <div class="ped-cab"><span class="ped-nombre">${esc(nombre)}${pendiente ? '<span class="etq-pend">⏳ Sin confirmar</span>' : ""}</span>
+        <span class="ped-total">${total}</span></div>
+      ${notas ? `<div class="ped-notas">${esc(notas)}</div>` : ""}
+      ${lineas.map(it => `
+        <div class="linea ${it.tachado ? "tachada" : ""}">
+          <div class="l-prod">${esc(it.producto)}${it.tachado && it.nota ? `<span class="nota-nohay">(${esc(it.nota)})</span>` : ""}</div>
+          <div class="l-fmt">${esc(it.formato || "")}</div>
+          <div class="l-cant">${it.cantidad === "" ? "" : num(it.cantidad)}</div>
+          <div class="l-tot">${it.importe === null ? "" : num(it.importe) + " €"}</div>
+        </div>`).join("")}
+    </div>`;
 }
-function copiarLista(){
-  const titulo = filtroTot === "faltan" ? "FALTAN" : filtroTot.slice(5);
-  const lineas = totales.filter(t => filtroTot === "faltan" ? (t.dif !== null && t.dif < 0) : t.proveedor === filtroTot.slice(5))
-    .map(t => {
-      const unidad = String(t.formato).toLowerCase() === "kg" ? " kg" : " × " + t.formato;
-      const falta = t.dif !== null && t.dif < 0 ? " (faltan " + num(-t.dif) + ")" : "";
-      return "- " + t.nombre + ": " + num(t.total) + unidad + falta;
-    });
-  const texto = titulo + "\n" + lineas.join("\n");
-  const ok = () => estado("Lista copiada: pégala en WhatsApp");
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok).catch(() => prompt("Copia la lista:", texto));
-  else prompt("Copia la lista:", texto);
+
+function pintarPedidos(){
+  const q = document.getElementById("buscar").value.trim().toLowerCase();
+  const coincide = (nombre, productos) => !q || nombre.toLowerCase().includes(q) || productos.some(p => p.toLowerCase().includes(q));
+
+  const pend = pendientes.map(p => ({ p, items: itemsDeTexto(p.pedido) }))
+    .filter(x => coincide(x.p.nombre, x.items.map(i => i.producto)));
+  const bys = pedidosBys.filter(p => coincide(p.nombre, p.items.map(i => i.producto)));
+
+  const totalN = pendientes.length + pedidosBys.length;
+  document.getElementById("n-ped").textContent = totalN ? "(" + totalN + ")" : "";
+  const cont = document.getElementById("pedidos");
+  if (!totalN) { cont.innerHTML = '<div class="vacio">No hay pedidos</div>'; return; }
+  if (!pend.length && !bys.length) { cont.innerHTML = '<div class="vacio">Nada coincide con la búsqueda</div>'; return; }
+
+  let html = "";
+  if (pend.length) {
+    html += `<div class="sec-ped">⏳ Sin confirmar (${pend.length})</div>`;
+    html += pend.map(x => tarjetaPedido(x.p.nombre, esc(x.p.total), x.p.observaciones, x.items, true)).join("");
+  }
+  if (bys.length) {
+    html += `<div class="sec-ped">✅ En BYS (${bys.length})</div>`;
+    html += bys.map(p => {
+      const total = p.items.reduce((s, it) => s + it.precio * it.cantidad, 0);
+      return tarjetaPedido(p.nombre, num(total) + " €", p.notas,
+        p.items.map(it => ({ producto: it.producto, formato: it.formato, cantidad: it.cantidad, importe: it.precio * it.cantidad,
+                             tachado: !!it.tachado, nota: it.nota || "" })), false);
+    }).join("");
+  }
+  cont.innerHTML = html;
 }
-function abrirHay(fila){
-  editandoFila = editandoFila === fila ? null : fila;
-  pintarTotales();
-  const i = document.getElementById("hay-total"); if (i) { i.focus(); i.select(); }
-}
-function cerrarHay(){ editandoFila = null; pintarTotales(); }
-function guardarHay(fila){
-  const t = totales.find(x => x.fila === fila);
-  if (!t) return;
-  const total = document.getElementById("hay-total").value.trim();
-  const b = document.getElementById("b-hay"); b.disabled = true; b.textContent = "Guardando…";
-  llamar("action=ponerhay&fila=" + fila + "&producto=" + encodeURIComponent(t.nombre) +
-         "&total=" + encodeURIComponent(total))
-    .then(d => {
-      totales = d.totales || totales; dinero = d.dinero;
-      editandoFila = null; pintarTotales();
-      estado("Guardado lo que hay de " + t.nombre);
-    })
-    .catch(err => { estado("No se pudo guardar: " + msgError(err), true); b.disabled = false; b.textContent = "💾 Guardar"; });
+
+function cerrarApp(){
+  window.close();
+  setTimeout(() => {                         // si el móvil no deja cerrarla, se explica cómo
+    if (document.querySelector(".aviso-cerrar")) return;
+    const a = document.createElement("div");
+    a.className = "aviso-cerrar";
+    a.textContent = "El móvil no deja cerrar la página desde aquí: ciérrala desde el botón de apps abiertas (deslizando hacia arriba).";
+    document.body.appendChild(a);
+    setTimeout(() => a.remove(), 4000);
+  }, 300);
 }
 
 function cargar(){
   if (cargando) return;
   cargando = true;
-  llamar("action=pedidos")
+  llamar("action=datosvista")
     .then(d => {
       cargando = false;
-      pedidos = d.pedidos.filter(p => enviando[p.id] !== "hecho");
-      pasados = d.pasados || [];
       totales = d.totales || [];
+      pedidosBys = d.bys || [];
+      pendientes = d.pendientes || [];
+      pintarTotales();
       pintarPedidos();
-      dinero = d.dinero === undefined ? null : d.dinero;
-      if (editandoFila === null) pintarTotales();   // no se borra lo que estás escribiendo
-      estado("Actualizado " + new Date().toLocaleTimeString("es-ES") + " · panel " + VERSION_PANEL +
-             " · script " + (d.version || "VIEJO ⚠️"), !d.version);
+      estado("Actualizado " + new Date().toLocaleTimeString("es-ES") + " · se actualiza solo");
     })
     .catch(err => {
       cargando = false;
       estado("Error: " + msgError(err) + " · reintentando…", true);
-      if (!pedidos.length) document.getElementById("pendientes").innerHTML =
-        '<div class="vacio">No se pudieron cargar los pedidos.<br><small>' + esc(err.message) + '</small></div>';
     });
 }
 
-function confirmar(id){
-  const p = pedidos.find(x => x.id === id);
-  if (!p || enviando[id] === "enviando") return;
-  enviando[id] = "enviando";
-  setTimeout(pintarPedidos, 300);   // dejar que primero se abra WhatsApp
-  llamar("action=confirmar&id=" + encodeURIComponent(id))
-    .then(() => {
-      enviando[id] = "hecho";
-      pedidos = pedidos.filter(x => x.id !== id);
-      pintarPedidos();
-      cargar();
-    })
-    .catch(err => {
-      enviando[id] = "error";
-      estado("No se pudo pasar a BYS: " + err.message, true);
-      pintarPedidos();
-    });
-}
-
-/* ---------- EXCEL ---------- */
-function generarExcel(){
-  if (!confirm("Se creará un Excel nuevo con los pedidos que hay en BYS (tu hoja BYS no se toca). Tarda un poco. ¿Seguir?")) return;
-  const b = document.getElementById("b-excel");
-  const res = document.getElementById("excel-res");
-  b.disabled = true; b.textContent = "⏳ Generando Excel… (puede tardar 1-2 minutos)";
-  res.innerHTML = "";
-  llamar("action=excel", 330)
-    .then(d => {
-      res.innerHTML = `
-        <div class="card" style="background:#f1f8f1">
-          <div class="nombre" style="font-size:15px">✅ ${d.pedidos} pedidos en ${d.paginas} hojas A4</div>
-          <div class="meta">Pedidos por hoja: ${d.porPagina.join(" + ")} · también enviado a tu correo</div>
-          <a class="btn-wa" href="${d.excel}">⬇️ Descargar Excel</a>
-          <a class="btn-wa" style="background:white;color:var(--primary);border:1.5px solid var(--primary)" href="${d.pdf}">🖨️ PDF para imprimir</a>
-          <div class="ok-row"><a class="link-btn" href="${d.hoja}">Abrir en Google Sheets</a>
-            <button class="link-btn" onclick="document.getElementById('excel-res').innerHTML=''">cerrar</button></div>
-        </div>`;
-    })
-    .catch(err => {
-      res.innerHTML = '<div class="obs" style="background:#fdecea;border-color:#f5c2c0;color:#c62828">⚠️ No se pudo generar: ' + esc(msgError(err)) + '</div>';
-    })
-    .finally(() => { b.disabled = false; b.textContent = "📄 Generar Excel de lo pedido (BYS)"; });
-}
-
-/* ---------- listas de envío (8 AM y mensaje) ---------- */
-function marcas(tipo){ return leerLocal("marcas-" + tipo, {}); }
-function marcar(tipo, movil){
-  const m = marcas(tipo); m[movil] = Date.now(); guardarLocal("marcas-" + tipo, m);
-  setTimeout(() => tipo === "8am" ? pintar8am() : pintarMensajes(), 300);
-}
-function borrarMarcas(tipo){
-  if (!confirm("¿Borrar las marcas de enviado de esta lista?")) return;
-  guardarLocal("marcas-" + tipo, {});
-  tipo === "8am" ? pintar8am() : pintarMensajes();
-}
-function filaPersona(tipo, p, texto){
-  const enviado = !!marcas(tipo)[p.movil];
-  const nombre = p.nombre || "(sin nombre)";
-  const extra = p.nota ? " · " + esc(p.nota) : "";
-  return `
-    <div class="persona ${enviado ? 'enviado' : ''}">
-      <div><div class="pn">${esc(nombre)}</div><div class="pm">${p.movil}${extra}${enviado ? " · ✓ enviado" : ""}</div></div>
-      <div class="derecha">
-        <a class="btn-enviar" href="${wa(p.movil, p.prefijo, texto)}" onclick="marcar('${tipo}','${p.movil}')">👉 ENVIAR</a>
-        ${tipo === "8am" ? `<button class="btn-quitar" title="Quitar de la lista" onclick="quitar8am(${p.fila}, '${p.movil}')">✕</button>` : ""}
-      </div>
-    </div>`;
-}
-
-/* 8 AM */
-function texto8am(p){
-  return "Buen día" + (p.nombre ? " " + p.nombre : "") + "! ¿quieres hacer pedido esta semana?";
-}
-function pintar8am(){
-  const cont = document.getElementById("lista8am");
-  if (!lista8) return;
-  const m = marcas("8am");
-  document.getElementById("n8-total").textContent = lista8.length;
-  document.getElementById("n8-env").textContent = lista8.filter(p => m[p.movil]).length;
-  cont.innerHTML = lista8.length ? lista8.map(p => filaPersona("8am", p, texto8am(p))).join("")
-                                 : '<div class="vacio">La hoja 8 AM está vacía</div>';
-}
-function accion8am(params, boton, textoBoton){
-  const b = document.getElementById(boton);
-  b.disabled = true; const antes = b.textContent; b.textContent = textoBoton;
-  estado("Trabajando en la hoja 8 AM…");
-  return llamar(params)
-    .then(d => { lista8 = d.lista; pintar8am(); estado("Hoja 8 AM actualizada " + new Date().toLocaleTimeString("es-ES")); })
-    .catch(err => estado("Error en 8 AM: " + msgError(err), true))
-    .finally(() => { b.disabled = false; b.textContent = antes; });
-}
-function cargar8am(){
-  estado("Cargando hoja 8 AM…");
-  llamar("action=ochoam")
-    .then(d => { lista8 = d.lista; pintar8am(); estado("Hoja 8 AM cargada " + new Date().toLocaleTimeString("es-ES")); })
-    .catch(err => { estado("Error en 8 AM: " + msgError(err), true);
-      document.getElementById("lista8am").innerHTML = '<div class="vacio">No se pudo cargar.<br><small>' + esc(err.message) + '</small></div>'; });
-}
-function quitar8am(fila, movil){
-  const p0 = (lista8 || []).find(p => p.fila === fila && p.movil === movil);
-  const nombre = p0 ? (p0.nombre || p0.movil) : movil;
-  if (!confirm("¿Quitar a " + nombre + " de la lista de 8 AM?\n\nSe borra su fila de la hoja 8 AM.")) return;
-  const antes = lista8;
-  lista8 = lista8.filter(p => !(p.fila === fila && p.movil === movil)); pintar8am();     // se quita al momento
-  llamar("action=borrar8am&fila=" + fila + "&movil=" + encodeURIComponent(movil))
-    .then(d => { lista8 = d.lista; pintar8am(); estado(nombre + " quitado de 8 AM"); })
-    .catch(err => { lista8 = antes; pintar8am(); estado("No se pudo quitar: " + msgError(err), true); });
-}
-function limpiar8am(){
-  if (!confirm("Esto hace lo mismo que escribir en E1 de la hoja 8 AM: borra de la lista a los que ya están en BYS (y sus parejas). ¿Seguir?")) return;
-  accion8am("action=limpiar8am", "b-limpiar", "Quitando…");
-}
-function copiar8am(){
-  if (!confirm("Esto hace lo mismo que COPIARA8AM: vuelve a copiar la lista completa desde MASTER a la hoja 8 AM. ¿Seguir?")) return;
-  accion8am("action=copiar8am", "b-copiar", "Cargando…").then(() => guardarLocal("marcas-8am", {})).then(pintar8am);
-}
-
-/* MENSAJE */
-function textoMsg(p){
-  return "Hola " + p.nombre + ", " + document.getElementById("texto-msg").value;
-}
-function previaMsg(){
-  const t = document.getElementById("texto-msg").value;
-  const cambiado = t !== textoGuardado;
-  document.getElementById("previa-msg").textContent = "Vista previa: Hola Nombre, " + t + (cambiado ? "\n\n⚠️ Sin guardar en la hoja" : "");
-}
-function pintarMensajes(){
-  if (!listaMsg) return;
-  const m = marcas("msg");
-  document.getElementById("nm-total").textContent = listaMsg.length;
-  document.getElementById("nm-env").textContent = listaMsg.filter(p => m[p.movil]).length;
-  document.getElementById("listamsg").innerHTML = listaMsg.length
-    ? listaMsg.map(p => filaPersona("msg", p, textoMsg(p))).join("")
-    : '<div class="vacio">La lista está vacía. Pulsa “Generar lista”.</div>';
-}
-function recibirMensajes(d, ponerTexto){
-  listaMsg = d.lista;
-  textoGuardado = d.texto;
-  if (ponerTexto) document.getElementById("texto-msg").value = d.texto;
-  previaMsg();
-  pintarMensajes();
-}
-function cargarMensajes(){
-  estado("Cargando hoja mensaje…");
-  llamar("action=mensajes")
-    .then(d => { recibirMensajes(d, true); estado("Hoja mensaje cargada " + new Date().toLocaleTimeString("es-ES")); })
-    .catch(err => { estado("Error en mensaje: " + msgError(err), true);
-      document.getElementById("listamsg").innerHTML = '<div class="vacio">No se pudo cargar.<br><small>' + esc(err.message) + '</small></div>'; });
-}
-function accionMsg(params, boton, textoBoton, ponerTexto){
-  const b = document.getElementById(boton);
-  b.disabled = true; const antes = b.textContent; b.textContent = textoBoton;
-  return llamar(params)
-    .then(d => { recibirMensajes(d, ponerTexto); estado("Hoja mensaje actualizada " + new Date().toLocaleTimeString("es-ES")); })
-    .catch(err => estado("Error en mensaje: " + msgError(err), true))
-    .finally(() => { b.disabled = false; b.textContent = antes; });
-}
-function guardarMensaje(){
-  const t = document.getElementById("texto-msg").value;
-  const nuevo = t !== textoGuardado;
-  accionMsg("action=guardarmensaje&texto=" + encodeURIComponent(t), "b-guardar", "Guardando…", false)
-    .then(() => { if (nuevo) { guardarLocal("marcas-msg", {}); pintarMensajes(); } });
-}
-function generarMensajes(){
-  if (!confirm("Esto hace lo mismo que escribir en E3 de la hoja mensaje: rehace la lista de nombres y teléfonos a partir de BYS. ¿Seguir?")) return;
-  accionMsg("action=generarmensajes", "b-generar", "Generando…", false);
-}
-
-/* ---------- EXTRA: productos de última hora ---------- */
-let extra = null;          // {categorias, productos}
-let quien = [];            // clientes con su cantidad del producto elegido
-
-function prodSel(){
-  const v = document.getElementById("ex-prod").value;
-  return extra && extra.productos.find(p => p.nombre + "|" + p.offset === v);
-}
-function opciones(p){
-  return String(p.formato).toLowerCase() === "kg" ? [0, 0.5, 1, 1.5, 2] : [0, 1, 2, 3];
-}
-function pintarExtra(elegir){
-  const cat = document.getElementById("ex-cat");
-  const antesCat = cat.value;
-  cat.innerHTML = extra.categorias.map(c => `<option value="${esc(c)}">Debajo de la última de ${esc(c)}</option>`).join("");
-  if (antesCat) cat.value = antesCat;
-  const sel = document.getElementById("ex-prod");
-  const antes = elegir || sel.value;
-  let html = "", c0 = null;
-  extra.productos.forEach(p => {
-    if (p.categoria !== c0) { if (c0 !== null) html += "</optgroup>"; c0 = p.categoria; html += `<optgroup label="${esc(c0)}">`; }
-    html += `<option value="${esc(p.nombre + "|" + p.offset)}">${esc(p.nombre)} (${esc(p.formato)})</option>`;
-  });
-  sel.innerHTML = '<option value="">— Elige producto —</option>' + html + "</optgroup>";
-  if (antes && [...sel.options].some(o => o.value === antes)) sel.value = antes;
-}
-function cargarExtra(){
-  estado("Cargando productos de BYS…");
-  llamar("action=extrainfo")
-    .then(d => { extra = d; pintarExtra(); estado("Productos cargados " + new Date().toLocaleTimeString("es-ES")); if (prodSel()) cargarQuien(); })
-    .catch(err => estado("Error: " + msgError(err), true));
-}
-function agregarProducto(){
-  const nombre = document.getElementById("ex-nombre").value.trim().toUpperCase();
-  const formato = document.getElementById("ex-formato").value.trim() || "kg";
-  const precio = document.getElementById("ex-precio").value.trim();
-  const cat = document.getElementById("ex-cat").value;
-  if (!nombre || !precio) { alert("Pon el nombre y el precio"); return; }
-  if (!confirm("¿Escribir " + nombre + " (" + formato + ", " + precio + " €) debajo de la última de " + cat + "?\n\nSe escribe en la fila vacía de debajo, en BYS y en TOTALES.")) return;
-  const b = document.getElementById("b-agregar"); b.disabled = true; b.textContent = "⏳ Escribiendo en BYS y TOTALES…";
-  const res = document.getElementById("ex-res"); res.innerHTML = "";
-  llamar("action=agregarproducto&nombre=" + encodeURIComponent(nombre) + "&formato=" + encodeURIComponent(formato) +
-         "&precio=" + encodeURIComponent(precio) + "&categoria=" + encodeURIComponent(cat), 330)
-    .then(d => {
-      extra = { categorias: d.categorias, productos: d.productos };
-      pintarExtra(d.agregado.nombre + "|" + d.agregado.offset);
-      res.innerHTML = d.yaExistia
-        ? `<div class="obs">ℹ️ ${esc(d.agregado.nombre)} ya estaba en la lista (no se ha cambiado nada). Márcalo abajo: quién quiere y cuánto.</div>`
-        : `<div class="obs" style="background:#f1f8f1;border-color:#cfe6cf;color:var(--primary)">✅ ${esc(d.agregado.nombre)} añadido en ${esc(d.agregado.categoria)}. Ahora marca abajo quién quiere.</div>`;
-      document.getElementById("ex-nombre").value = ""; document.getElementById("ex-precio").value = "";
-      cargarQuien(); cargar();
-    })
-    .catch(err => { res.innerHTML = '<div class="obs" style="background:#fdecea;border-color:#f5c2c0;color:#c62828">⚠️ ' + esc(msgError(err)) + '</div>'; })
-    .finally(() => { b.disabled = false; b.textContent = "➕ Añadir producto"; });
-}
-function pintarQuien(){
-  const p = prodSel();
-  const cont = document.getElementById("ex-lista");
-  if (!p) { cont.innerHTML = '<div class="vacio">Elige un producto</div>'; document.getElementById("ex-resumen").textContent = ""; return; }
-  const total = quien.reduce((s, c) => s + (c.cantidad || 0), 0);
-  const cuantos = quien.filter(c => c.cantidad > 0).length;
-  document.getElementById("ex-resumen").textContent =
-    `${p.nombre}: ${num(total)} ${String(p.formato).toLowerCase() === "kg" ? "kg" : "× " + p.formato} · ${cuantos} ${cuantos === 1 ? "cliente" : "clientes"}`;
-  if (!quien.length) { cont.innerHTML = '<div class="vacio">No hay pedidos en BYS</div>'; return; }
-  cont.innerHTML = quien.map((c, i) => {
-    const ops = opciones(p);
-    const fuera = c.cantidad > 0 && ops.indexOf(c.cantidad) === -1;
-    return `<div class="cliente-q ${c.cantidad > 0 ? 'tiene' : ''}">
-      <div class="cn">${esc(c.nombre)}</div>
-      <div class="chips">
-        ${ops.map(o => `<button class="chip-c ${c.cantidad === o ? 'sel' : ''}" onclick="ponerCantidad(${i}, ${o})">${o === 0 ? "0" : num(o)}</button>`).join("")}
-        <button class="chip-c ${fuera ? 'sel' : ''}" onclick="otraCantidad(${i})">${fuera ? num(c.cantidad) : "otra"}</button>
-      </div></div>`;
-  }).join("");
-}
-function cargarQuien(){
-  const p = prodSel();
-  if (!p) { quien = []; pintarQuien(); return; }
-  document.getElementById("ex-lista").innerHTML = '<div class="vacio">Cargando…</div>';
-  llamar("action=quienquiere&offset=" + p.offset + "&producto=" + encodeURIComponent(p.nombre))
-    .then(d => { quien = d.clientes; pintarQuien(); })
-    .catch(err => { document.getElementById("ex-lista").innerHTML = '<div class="vacio">Error: ' + esc(msgError(err)) + '</div>'; });
-}
-function ponerCantidad(i, cantidad){
-  const p = prodSel(); const c = quien[i];
-  if (!p || !c) return;
-  const antes = c.cantidad;
-  c.cantidad = cantidad; pintarQuien();                                       // se ve al momento
-  llamar("action=ponercantidad&bloque=" + c.bloque + "&offset=" + (c.offset !== undefined ? c.offset : p.offset) + "&producto=" + encodeURIComponent(p.nombre) +
-         "&cantidad=" + cantidad)
-    .then(d => { quien = d.clientes; pintarQuien(); estado("Guardado " + c.nombre + ": " + num(cantidad)); cargar(); })
-    .catch(err => { c.cantidad = antes; pintarQuien(); estado("No se pudo guardar: " + msgError(err), true); });
-}
-function otraCantidad(i){
-  const v = prompt("Cantidad para " + quien[i].nombre + ":", quien[i].cantidad || "");
-  if (v === null) return;
-  const n = parseFloat(String(v).replace(",", "."));
-  if (isNaN(n) || n < 0) { alert("Cantidad no válida"); return; }
-  ponerCantidad(i, n);
-}
-
-/* ---------- arranque ---------- */
-const vistaGuardada = leerLocal("vista", "pedidos");
 cargar();
-verVista(["pedidos","totales","ochoam","mensaje","extra"].indexOf(vistaGuardada) !== -1 ? vistaGuardada : "pedidos");
 setInterval(() => { if (!document.hidden) cargar(); }, CADA_SEGUNDOS * 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) cargar(); });
 </script>
