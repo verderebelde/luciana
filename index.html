@@ -121,6 +121,8 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .sel-prov.sel{background:var(--primary);border-color:var(--primary);color:white}
 .botones-lista{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin:0 0 10px}
 .btn-wa-lista{border:none;background:#25d366;color:white;font:700 14px 'Montserrat';padding:11px;border-radius:10px}
+.botones-excel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.botones-excel .btn-sec{min-width:0}
 </style>
 </head>
 <body>
@@ -145,7 +147,10 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
     <div class="chip">Por confirmar: <b id="n-pend">–</b></div>
     <div class="chip">Pasados (VIEJOS): <b id="n-ok">–</b></div>
   </div>
-  <button class="btn-sec" id="b-excel" style="width:100%;margin-bottom:10px" onclick="generarExcel()">📄 Generar Excel de lo pedido (BYS)</button>
+  <div class="botones-excel">
+    <button class="btn-sec" id="b-excel" onclick="generarExcel(false)">📄 Excel: todos</button>
+    <button class="btn-sec" id="b-excel-nuevos" onclick="generarExcel(true)">🆕 Excel: solo nuevos</button>
+  </div>
   <div id="excel-res"></div>
   <div id="pendientes"><div class="vacio">Cargando…</div></div>
   <details class="pasados" id="pasados-wrap">
@@ -212,7 +217,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "13-oct 07:45";
+const VERSION_PANEL = "13-oct 13:05";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -563,17 +568,22 @@ function confirmar(id){
 }
 
 /* ---------- EXCEL ---------- */
-function generarExcel(){
-  if (!confirm("Se creará un Excel nuevo con los pedidos que hay en BYS (tu hoja BYS no se toca). Tarda un poco. ¿Seguir?")) return;
-  const b = document.getElementById("b-excel");
+function generarExcel(soloNuevos){
+  const pregunta = soloNuevos
+    ? "Se creará un Excel solo con los pedidos que no estaban en el último Excel (o que han cambiado). ¿Seguir?"
+    : "Se creará un Excel con TODOS los pedidos que hay en BYS (tu hoja BYS no se toca). ¿Seguir?";
+  if (!confirm(pregunta)) return;
+  const botones = [document.getElementById("b-excel"), document.getElementById("b-excel-nuevos")];
+  const textos = botones.map(b => b.textContent);
+  const b = soloNuevos ? botones[1] : botones[0];
+  botones.forEach(x => x.disabled = true); b.textContent = "⏳ Generando…";
   const res = document.getElementById("excel-res");
-  b.disabled = true; b.textContent = "⏳ Generando Excel… (puede tardar 1-2 minutos)";
   res.innerHTML = "";
-  llamar("action=excel", 330)
+  llamar("action=excel" + (soloNuevos ? "&solo=nuevos" : ""), 330)
     .then(d => {
       res.innerHTML = `
         <div class="card" style="background:#f1f8f1">
-          <div class="nombre" style="font-size:15px">✅ ${d.pedidos} pedidos en ${d.paginas} hojas A4</div>
+          <div class="nombre" style="font-size:15px">✅ ${d.pedidos} ${d.soloNuevos ? "pedidos nuevos" : "pedidos"} en ${d.paginas} ${d.paginas === 1 ? "hoja" : "hojas"} A4</div>
           <div class="meta">Pedidos por hoja: ${d.porPagina.join(" + ")} · también enviado a tu correo</div>
           <a class="btn-wa" href="${d.excel}">⬇️ Descargar Excel</a>
           <a class="btn-wa" style="background:white;color:var(--primary);border:1.5px solid var(--primary)" href="${d.pdf}">🖨️ PDF para imprimir</a>
@@ -582,9 +592,9 @@ function generarExcel(){
         </div>`;
     })
     .catch(err => {
-      res.innerHTML = '<div class="obs" style="background:#fdecea;border-color:#f5c2c0;color:#c62828">⚠️ No se pudo generar: ' + esc(msgError(err)) + '</div>';
+      res.innerHTML = '<div class="obs" style="background:#fdecea;border-color:#f5c2c0;color:#c62828">⚠️ ' + esc(msgError(err)) + '</div>';
     })
-    .finally(() => { b.disabled = false; b.textContent = "📄 Generar Excel de lo pedido (BYS)"; });
+    .finally(() => { botones.forEach((x, k) => { x.disabled = false; x.textContent = textos[k]; }); });
 }
 
 /* ---------- listas de envío (8 AM y mensaje) ---------- */
