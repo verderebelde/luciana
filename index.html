@@ -100,6 +100,9 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .cliente-q{background:white;border:1px solid #e6efe6;border-radius:12px;padding:10px 12px;margin-bottom:6px}
 .cliente-q .cn{font-weight:600;font-size:15px;margin-bottom:6px}
 .cliente-q.tiene{border-color:var(--accent);background:#f6fbf6}
+.cliente-q.nohay{border-color:#f5c2c0;background:#fdf3f2}
+.etq-nohay{font-size:10.5px;font-weight:700;color:#c62828;background:#fdecea;border-radius:6px;padding:1px 6px;margin-left:8px;vertical-align:middle}
+.cliente-q.nohay .chip-c.sel{background:#c62828;border-color:#c62828}
 .resumen-q{font-size:14px;margin:6px 0 10px;color:var(--primary);font-weight:600}
 .dinero{background:white;border:1.5px solid var(--accent);border-radius:14px;padding:12px 16px;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
 .dinero span{font-size:13px;color:var(--muted);font-weight:600}
@@ -234,7 +237,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "13-oct 15:20";
+const VERSION_PANEL = "13-oct 23:00";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -851,10 +854,11 @@ function pintarQuien(){
   cont.innerHTML = quien.map((c, i) => {
     const ops = opciones(p);
     const fuera = c.cantidad > 0 && ops.indexOf(c.cantidad) === -1;
-    return `<div class="cliente-q ${c.cantidad > 0 ? 'tiene' : ''}">
-      <div class="cn">${esc(c.nombre)}</div>
+    const nohay = c.cantidad === 0;
+    return `<div class="cliente-q ${c.cantidad > 0 ? 'tiene' : ''} ${nohay ? 'nohay' : ''}">
+      <div class="cn">${esc(c.nombre)}${nohay ? '<span class="etq-nohay">NO HAY MAS</span>' : ''}</div>
       <div class="chips">
-        ${ops.map(o => `<button class="chip-c ${c.cantidad === o ? 'sel' : ''}" onclick="ponerCantidad(${i}, ${o})">${o === 0 ? "0" : num(o)}</button>`).join("")}
+        ${ops.map(o => `<button class="chip-c ${c.cantidad === o ? 'sel' : ''}" onclick="ponerCantidad(${i}, ${o === 0 && nohay ? "''" : o})">${o === 0 ? "0" : num(o)}</button>`).join("")}
         <button class="chip-c ${fuera ? 'sel' : ''}" onclick="otraCantidad(${i})">${fuera ? num(c.cantidad) : "otra"}</button>
       </div></div>`;
   }).join("");
@@ -871,10 +875,10 @@ function ponerCantidad(i, cantidad){
   const p = prodSel(); const c = quien[i];
   if (!p || !c) return;
   const antes = c.cantidad;
-  c.cantidad = cantidad; pintarQuien();                                       // se ve al momento
+  c.cantidad = cantidad === "" ? null : cantidad; pintarQuien();             // se ve al momento ("" = quitar)
   llamar("action=ponercantidad&bloque=" + c.bloque + "&offset=" + (c.offset !== undefined ? c.offset : p.offset) + "&producto=" + encodeURIComponent(p.nombre) +
          "&cantidad=" + cantidad)
-    .then(d => { quien = d.clientes; pintarQuien(); estado("Guardado " + c.nombre + ": " + num(cantidad)); cargar(); })
+    .then(d => { quien = d.clientes; pintarQuien(); estado("Guardado " + c.nombre + ": " + (cantidad === "" ? "quitado" : cantidad === 0 ? "0 · NO HAY MAS" : num(cantidad))); cargar(); })
     .catch(err => { c.cantidad = antes; pintarQuien(); estado("No se pudo guardar: " + msgError(err), true); });
 }
 function otraCantidad(i){
