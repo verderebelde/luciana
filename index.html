@@ -103,6 +103,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .cliente-q.nohay{border-color:#f5c2c0;background:#fdf3f2}
 .etq-nohay{font-size:10.5px;font-weight:700;color:#c62828;background:#fdecea;border-radius:6px;padding:1px 6px;margin-left:8px;vertical-align:middle}
 .cliente-q.nohay .chip-c.sel{background:#c62828;border-color:#c62828}
+.buscar-q{width:100%;font:15px 'Montserrat';padding:10px 12px;border-radius:12px;border:1.5px solid #dfe9df;background:white;color:var(--text);margin:0 0 8px}
 .cab-q{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .cab-q .cn{margin-bottom:0}
 .btn-hecho{border:1.5px solid #cfdccf;background:white;color:var(--muted);font:700 13px 'Montserrat';padding:7px 12px;border-radius:20px;white-space:nowrap}
@@ -240,12 +241,13 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
   <h2>2 · ¿Quién quiere?</h2>
   <div class="form-extra"><select id="ex-prod" class="ancho" onchange="cargarQuien()"></select></div>
   <div class="resumen-q" id="ex-resumen"></div>
+  <input id="ex-buscar" class="buscar-q" type="search" placeholder="🔍 Buscar cliente…" oninput="pintarQuien()">
   <div class="filtros" id="ex-filtros"></div>
   <div id="ex-lista"><div class="vacio">Elige un producto</div></div>
 </div>
 
 <script>
-const VERSION_PANEL = "15-oct 13:40";
+const VERSION_PANEL = "15-oct 14:10";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -869,8 +871,14 @@ function pintarQuien(){
     <button class="filtro ${verQuien === "todos" ? "sel" : ""}" onclick="filtroQuien('todos')">Todos (${quien.length})</button>
     ${quien.some(c => c.hecho) ? `<button class="link-btn" onclick="borrarHechos()">Quitar todos los ✓</button>` : ""}`;
   if (!quien.length) { cont.innerHTML = '<div class="vacio">No hay pedidos en BYS</div>'; return; }
-  const visibles = quien.map((c, i) => ({ c, i })).filter(x => verQuien === "todos" || (x.c.cantidad !== null && x.c.cantidad !== undefined));
-  if (!visibles.length) { cont.innerHTML = '<div class="vacio">Nadie lo ha pedido todavía. Pulsa «Todos» para ponérselo a alguien.</div>'; return; }
+  const sinAcentos = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const q = sinAcentos(document.getElementById("ex-buscar").value.trim());
+  const visibles = quien.map((c, i) => ({ c, i }))
+    .filter(x => q ? sinAcentos(x.c.nombre).includes(q)                        // buscando: entre todos los clientes
+                   : (verQuien === "todos" || (x.c.cantidad !== null && x.c.cantidad !== undefined)))
+    .sort((a, b) => a.c.nombre.localeCompare(b.c.nombre, "es", { sensitivity: "base" }));   // orden alfabético
+  if (!visibles.length) { cont.innerHTML = q ? '<div class="vacio">Ningún cliente se llama así</div>'
+                                             : '<div class="vacio">Nadie lo ha pedido todavía. Pulsa «Todos» para ponérselo a alguien.</div>'; return; }
   const ops = opciones(p);
   cont.innerHTML = visibles.map(({ c, i }) => {
     const fuera = c.cantidad > 0 && ops.indexOf(c.cantidad) === -1;
