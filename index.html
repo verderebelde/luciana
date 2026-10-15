@@ -103,6 +103,13 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .cliente-q.nohay{border-color:#f5c2c0;background:#fdf3f2}
 .etq-nohay{font-size:10.5px;font-weight:700;color:#c62828;background:#fdecea;border-radius:6px;padding:1px 6px;margin-left:8px;vertical-align:middle}
 .cliente-q.nohay .chip-c.sel{background:#c62828;border-color:#c62828}
+.cab-q{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.cab-q .cn{margin-bottom:0}
+.btn-hecho{border:1.5px solid #cfdccf;background:white;color:var(--muted);font:700 13px 'Montserrat';padding:7px 12px;border-radius:20px;white-space:nowrap}
+.btn-hecho.sel{background:#e3f2e4;border-color:var(--primary);color:var(--primary)}
+.cliente-q.hecho{border-left:5px solid var(--primary)}
+.btn-nota{display:block;width:100%;text-align:left;margin-top:8px;border:1px dashed #cfdccf;background:transparent;color:var(--muted);font:500 12.5px 'Montserrat';padding:7px 10px;border-radius:9px}
+.btn-nota.con{border-style:solid;border-color:#f0e2a3;background:#fffbea;color:#6b5b00;font-style:italic;font-weight:600}
 .resumen-q{font-size:14px;margin:6px 0 10px;color:var(--primary);font-weight:600}
 .dinero{background:white;border:1.5px solid var(--accent);border-radius:14px;padding:12px 16px;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
 .dinero span{font-size:13px;color:var(--muted);font-weight:600}
@@ -233,11 +240,12 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
   <h2>2 · ¿Quién quiere?</h2>
   <div class="form-extra"><select id="ex-prod" class="ancho" onchange="cargarQuien()"></select></div>
   <div class="resumen-q" id="ex-resumen"></div>
+  <div class="filtros" id="ex-filtros"></div>
   <div id="ex-lista"><div class="vacio">Elige un producto</div></div>
 </div>
 
 <script>
-const VERSION_PANEL = "13-oct 23:00";
+const VERSION_PANEL = "15-oct 13:40";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -842,26 +850,72 @@ function agregarProducto(){
     .catch(err => { res.innerHTML = '<div class="obs" style="background:#fdecea;border-color:#f5c2c0;color:#c62828">⚠️ ' + esc(msgError(err)) + '</div>'; })
     .finally(() => { b.disabled = false; b.textContent = "➕ Añadir producto"; });
 }
+let verQuien = "piden";     // "piden" = solo los que lo han pedido · "todos"
+function filtroQuien(v){ verQuien = v; pintarQuien(); }
 function pintarQuien(){
   const p = prodSel();
   const cont = document.getElementById("ex-lista");
-  if (!p) { cont.innerHTML = '<div class="vacio">Elige un producto</div>'; document.getElementById("ex-resumen").textContent = ""; return; }
+  const filtros = document.getElementById("ex-filtros");
+  if (!p) { cont.innerHTML = '<div class="vacio">Elige un producto</div>'; document.getElementById("ex-resumen").textContent = ""; filtros.innerHTML = ""; return; }
   const total = quien.reduce((s, c) => s + (c.cantidad || 0), 0);
+  const piden = quien.filter(c => c.cantidad !== null && c.cantidad !== undefined);
   const cuantos = quien.filter(c => c.cantidad > 0).length;
+  const puestos = quien.filter(c => c.cantidad > 0 && c.hecho).length;
   document.getElementById("ex-resumen").textContent =
-    `${p.nombre}: ${num(total)} ${String(p.formato).toLowerCase() === "kg" ? "kg" : "× " + p.formato} · ${cuantos} ${cuantos === 1 ? "cliente" : "clientes"}`;
+    `${p.nombre}: ${num(total)} ${String(p.formato).toLowerCase() === "kg" ? "kg" : "× " + p.formato} · ${cuantos} ${cuantos === 1 ? "cliente" : "clientes"}` +
+    (cuantos ? ` · ✓ puesto en ${puestos} de ${cuantos}` : "");
+  filtros.innerHTML = `
+    <button class="filtro ${verQuien === "piden" ? "sel" : ""}" onclick="filtroQuien('piden')">Lo piden (${piden.length})</button>
+    <button class="filtro ${verQuien === "todos" ? "sel" : ""}" onclick="filtroQuien('todos')">Todos (${quien.length})</button>
+    ${quien.some(c => c.hecho) ? `<button class="link-btn" onclick="borrarHechos()">Quitar todos los ✓</button>` : ""}`;
   if (!quien.length) { cont.innerHTML = '<div class="vacio">No hay pedidos en BYS</div>'; return; }
-  cont.innerHTML = quien.map((c, i) => {
-    const ops = opciones(p);
+  const visibles = quien.map((c, i) => ({ c, i })).filter(x => verQuien === "todos" || (x.c.cantidad !== null && x.c.cantidad !== undefined));
+  if (!visibles.length) { cont.innerHTML = '<div class="vacio">Nadie lo ha pedido todavía. Pulsa «Todos» para ponérselo a alguien.</div>'; return; }
+  const ops = opciones(p);
+  cont.innerHTML = visibles.map(({ c, i }) => {
     const fuera = c.cantidad > 0 && ops.indexOf(c.cantidad) === -1;
     const nohay = c.cantidad === 0;
-    return `<div class="cliente-q ${c.cantidad > 0 ? 'tiene' : ''} ${nohay ? 'nohay' : ''}">
-      <div class="cn">${esc(c.nombre)}${nohay ? '<span class="etq-nohay">NO HAY MAS</span>' : ''}</div>
+    const nota = nohay ? "" : (c.nota || "");
+    return `<div class="cliente-q ${c.cantidad > 0 ? 'tiene' : ''} ${nohay ? 'nohay' : ''} ${c.hecho ? 'hecho' : ''}">
+      <div class="cab-q">
+        <div class="cn">${esc(c.nombre)}${nohay ? '<span class="etq-nohay">NO HAY MAS</span>' : ''}</div>
+        <button class="btn-hecho ${c.hecho ? 'sel' : ''}" onclick="marcarHecho(${i})">${c.hecho ? "✓ Puesto" : "○ Sin poner"}</button>
+      </div>
       <div class="chips">
         ${ops.map(o => `<button class="chip-c ${c.cantidad === o ? 'sel' : ''}" onclick="ponerCantidad(${i}, ${o === 0 && nohay ? "''" : o})">${o === 0 ? "0" : num(o)}</button>`).join("")}
         <button class="chip-c ${fuera ? 'sel' : ''}" onclick="otraCantidad(${i})">${fuera ? num(c.cantidad) : "otra"}</button>
-      </div></div>`;
+      </div>
+      ${nohay ? "" : `<button class="btn-nota ${nota ? 'con' : ''}" onclick="ponerNota(${i})">💬 ${nota ? esc(nota) : "Añadir comentario (ej: 8 unidades)"}</button>`}
+    </div>`;
   }).join("");
+}
+function ponerNota(i){
+  const p = prodSel(); const c = quien[i];
+  if (!p || !c) return;
+  const v = prompt("Comentario para " + c.nombre + " (sale en el Excel al lado del producto).\nDéjalo vacío para borrarlo:", c.nota || "");
+  if (v === null) return;
+  const antes = c.nota;
+  c.nota = v.trim(); pintarQuien();
+  llamar("action=ponernota&bloque=" + c.bloque + "&offset=" + c.offset + "&producto=" + encodeURIComponent(p.nombre) +
+         "&texto=" + encodeURIComponent(c.nota))
+    .then(d => { quien = d.clientes; pintarQuien(); estado("Comentario guardado: " + c.nombre); })
+    .catch(err => { c.nota = antes; pintarQuien(); estado("No se pudo guardar: " + msgError(err), true); });
+}
+function marcarHecho(i){
+  const p = prodSel(); const c = quien[i];
+  if (!p || !c) return;
+  c.hecho = !c.hecho; pintarQuien();
+  llamar("action=marcarhecho&offset=" + c.offset + "&nombre=" + encodeURIComponent(c.nombre) + "&producto=" + encodeURIComponent(p.nombre) +
+         "&valor=" + (c.hecho ? 1 : 0))
+    .then(d => { quien = d.clientes; pintarQuien(); })
+    .catch(err => { c.hecho = !c.hecho; pintarQuien(); estado("No se pudo guardar: " + msgError(err), true); });
+}
+function borrarHechos(){
+  const p = prodSel();
+  if (!p || !confirm("¿Quitar todos los ✓ de " + p.nombre + "?")) return;
+  llamar("action=borrarhechos&offset=" + p.offset + "&producto=" + encodeURIComponent(p.nombre))
+    .then(d => { quien = d.clientes; pintarQuien(); })
+    .catch(err => estado("No se pudo: " + msgError(err), true));
 }
 function cargarQuien(){
   const p = prodSel();
