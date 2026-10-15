@@ -241,13 +241,17 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
   <h2>2 · ¿Quién quiere?</h2>
   <div class="form-extra"><select id="ex-prod" class="ancho" onchange="cargarQuien()"></select></div>
   <div class="resumen-q" id="ex-resumen"></div>
+  <div class="botones-lista oculto" id="ex-wa">
+    <button class="btn-wa-lista" onclick="enviarExtraWhatsApp()">📲 Enviar resumen por WhatsApp</button>
+    <button class="btn-sec" style="min-width:0" onclick="copiarExtra()">📋 Copiar</button>
+  </div>
   <input id="ex-buscar" class="buscar-q" type="search" placeholder="🔍 Buscar cliente…" oninput="pintarQuien()">
   <div class="filtros" id="ex-filtros"></div>
   <div id="ex-lista"><div class="vacio">Elige un producto</div></div>
 </div>
 
 <script>
-const VERSION_PANEL = "15-oct 14:10";
+const VERSION_PANEL = "15-oct 22:20";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -858,6 +862,7 @@ function pintarQuien(){
   const p = prodSel();
   const cont = document.getElementById("ex-lista");
   const filtros = document.getElementById("ex-filtros");
+  document.getElementById("ex-wa").classList.toggle("oculto", !p || !quien.some(c => c.cantidad !== null && c.cantidad !== undefined));
   if (!p) { cont.innerHTML = '<div class="vacio">Elige un producto</div>'; document.getElementById("ex-resumen").textContent = ""; filtros.innerHTML = ""; return; }
   const total = quien.reduce((s, c) => s + (c.cantidad || 0), 0);
   const piden = quien.filter(c => c.cantidad !== null && c.cantidad !== undefined);
@@ -896,6 +901,31 @@ function pintarQuien(){
       ${nohay ? "" : `<button class="btn-nota ${nota ? 'con' : ''}" onclick="ponerNota(${i})">💬 ${nota ? esc(nota) : "Añadir comentario (ej: 8 unidades)"}</button>`}
     </div>`;
   }).join("");
+}
+// Resumen del producto elegido para mandarlo por WhatsApp (en orden alfabético)
+function textoExtra(){
+  const p = prodSel();
+  if (!p) return "";
+  const unidad = String(p.formato).toLowerCase() === "kg" ? " kg" : " × " + p.formato;
+  const piden = quien.filter(c => c.cantidad !== null && c.cantidad !== undefined)
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" }));
+  const conCant = piden.filter(c => c.cantidad > 0);
+  const total = conCant.reduce((s, c) => s + c.cantidad, 0);
+  const lineas = conCant.map(c => "- " + c.nombre + ": " + num(c.cantidad) + unidad +
+                                 (c.nota && !NO_HAY_RE.test(c.nota) ? " (" + c.nota + ")" : "") + (c.hecho ? " ✓" : ""));
+  const nohay = piden.filter(c => c.cantidad === 0).map(c => "- " + c.nombre + ": NO HAY MAS");
+  return "*" + p.nombre + "*: " + num(total) + unidad + " · " + conCant.length + (conCant.length === 1 ? " cliente" : " clientes") +
+         "\n\n" + lineas.join("\n") + (nohay.length ? "\n\n❌ Sin producto:\n" + nohay.join("\n") : "");
+}
+const NO_HAY_RE = /no\s*hay|no\s*queda|agotad|sin\s*stock|no\s*tenemos/i;
+function enviarExtraWhatsApp(){
+  window.open("https://wa.me/?text=" + encodeURIComponent(textoExtra()), "_blank");
+}
+function copiarExtra(){
+  const texto = textoExtra();
+  const ok = () => estado("Resumen copiado: pégalo en WhatsApp");
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok).catch(() => prompt("Copia el resumen:", texto));
+  else prompt("Copia el resumen:", texto);
 }
 function ponerNota(i){
   const p = prodSel(); const c = quien[i];
