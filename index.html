@@ -174,7 +174,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
     <div class="chip">Pasados (VIEJOS): <b id="n-ok">–</b></div>
   </div>
   <div class="botones-excel">
-    <button class="btn-sec" id="b-excel" onclick="generarExcel(false)">📄 Excel: todos</button>
+    <button class="btn-sec" id="b-excel" onclick="generarExcel(false)">📄 Imprimir: todos</button>
     <button class="btn-sec" id="b-excel-nuevos" onclick="generarExcel(true)">🆕 Solo nuevos</button>
     <button class="btn-sec" id="b-excel-elegir" onclick="abrirElegir()">☑️ Elegir</button>
   </div>
@@ -251,7 +251,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "15-oct 22:20";
+const VERSION_PANEL = "19-oct 11:20";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -625,7 +625,7 @@ function pintarElegir(){
         <label><input type="checkbox" class="chk-excel" data-i="${i}" ${p.nuevo ? "checked" : ""} onchange="contarElegidos()">
           <span>${esc(p.nombre)} ${p.nuevo ? '<span class="etq-nuevo">NUEVO</span>' : ""}</span>
           <span class="det">${p.productos} prod.</span></label>`).join("")}
-      <button class="btn-wa" id="b-imprimir-elegidos" onclick="imprimirElegidos()">🖨️ Excel de los elegidos</button>
+      <button class="btn-wa" id="b-imprimir-elegidos" onclick="imprimirElegidos()">🖨️ Imprimir los elegidos</button>
     </div>`;
   contarElegidos();
 }
@@ -639,7 +639,7 @@ function marcarElegir(modo){
 function contarElegidos(){
   const n = document.querySelectorAll(".chk-excel:checked").length;
   const b = document.getElementById("b-imprimir-elegidos");
-  if (b) { b.textContent = "🖨️ Excel de los elegidos (" + n + ")"; b.style.opacity = n ? 1 : .5; }
+  if (b) { b.textContent = "🖨️ Imprimir los elegidos (" + n + ")"; b.style.opacity = n ? 1 : .5; }
 }
 function imprimirElegidos(){
   const ids = [...document.querySelectorAll(".chk-excel:checked")].map(ch => listaExcel[Number(ch.dataset.i)].id);
@@ -650,8 +650,8 @@ function imprimirElegidos(){
 
 function generarExcel(soloNuevos, ids){
   const pregunta = ids ? null : soloNuevos
-    ? "Se creará un Excel solo con los pedidos que no estaban en el último Excel (o que han cambiado). ¿Seguir?"
-    : "Se creará un Excel con TODOS los pedidos que hay en BYS (tu hoja BYS no se toca). ¿Seguir?";
+    ? "Se creará una hoja de Google solo con los pedidos que no estaban en la última (o que han cambiado). ¿Seguir?"
+    : "Se creará una hoja de Google con TODOS los pedidos que hay en BYS (tu hoja BYS no se toca). ¿Seguir?";
   if (pregunta && !confirm(pregunta)) return;
   const botones = [document.getElementById("b-excel"), document.getElementById("b-excel-nuevos"), document.getElementById("b-excel-elegir")];
   const textos = botones.map(b => b.textContent);
@@ -664,10 +664,9 @@ function generarExcel(soloNuevos, ids){
       res.innerHTML = `
         <div class="card" style="background:#f1f8f1">
           <div class="nombre" style="font-size:15px">✅ ${d.pedidos} ${d.soloNuevos ? "pedidos nuevos" : ids ? "pedidos elegidos" : "pedidos"} en ${d.paginas} ${d.paginas === 1 ? "hoja" : "hojas"} A4</div>
-          <div class="meta">Pedidos por hoja: ${d.porPagina.join(" + ")} · también enviado a tu correo</div>
-          <a class="btn-wa" href="${d.excel}">⬇️ Descargar Excel</a>
-          <a class="btn-wa" style="background:white;color:var(--primary);border:1.5px solid var(--primary)" href="${d.pdf}">🖨️ PDF para imprimir</a>
-          <div class="ok-row"><a class="link-btn" href="${d.hoja}">Abrir en Google Sheets</a>
+          <div class="meta">Pedidos por hoja: ${d.porPagina.join(" + ")} · cada pestaña es una hoja A4</div>
+          <a class="btn-wa" href="${d.hoja}">📄 Abrir en Google Sheets para imprimir</a>
+          <div class="ok-row"><span></span>
             <button class="link-btn" onclick="document.getElementById('excel-res').innerHTML=''">cerrar</button></div>
         </div>`;
     })
