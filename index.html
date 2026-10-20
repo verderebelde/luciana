@@ -253,7 +253,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "20-oct 13:50";
+const VERSION_PANEL = "20-oct 16:25";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -507,7 +507,7 @@ function pintarTotales(){
           <button class="guardar" id="b-hay" onclick="guardarHay(${t.fila})">💾 Guardar</button>
         </div>
         ${t.enWeb ? `<button class="btn-agotar ${t.agotado ? 'reactivar' : ''}" id="b-agotar" onclick="agotar(${t.fila}, ${t.agotado ? 0 : 1})">
-          ${t.agotado ? "✅ Volver a ponerlo a la venta en la web" : "🚫 NO HAY MÁS en la web (HASTA = 0)"}</button>`
+          ${t.agotado ? "✅ Volver a ponerlo a la venta en la web" : "🚫 NO HAY MÁS en la web"}</button>`
           : '<p class="aviso" style="margin:8px 0 0">No está en PRODUCTOS (la web), no se puede marcar "no hay más".</p>'}
       </div>`;
     }
@@ -571,7 +571,7 @@ function cerrarHay(){ editandoFila = null; pintarTotales(); }
 function agotar(fila, valor){
   const t = totales.find(x => x.fila === fila);
   if (!t) return;
-  if (valor && !confirm("¿Marcar " + t.nombre + " como NO HAY MÁS en la web?\n(Se pone 0 en la columna HASTA de PRODUCTOS)")) return;
+  if (valor && !confirm("¿Marcar " + t.nombre + " como NO HAY MÁS en la web?")) return;
   const b = document.getElementById("b-agotar"); if (b) { b.disabled = true; b.textContent = "Guardando…"; }
   llamar("action=agotar&producto=" + encodeURIComponent(t.nombre) + "&valor=" + valor)
     .then(d => {
