@@ -251,7 +251,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "19-oct 11:20";
+const VERSION_PANEL = "20-oct 09:30";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -650,8 +650,8 @@ function imprimirElegidos(){
 
 function generarExcel(soloNuevos, ids){
   const pregunta = ids ? null : soloNuevos
-    ? "Se creará una hoja de Google solo con los pedidos que no estaban en la última (o que han cambiado). ¿Seguir?"
-    : "Se creará una hoja de Google con TODOS los pedidos que hay en BYS (tu hoja BYS no se toca). ¿Seguir?";
+    ? "Se enviará a tu correo un Excel solo con los pedidos que no estaban en el último (o que han cambiado). ¿Seguir?"
+    : "Se enviará a tu correo un Excel con TODOS los pedidos que hay en BYS (tu hoja BYS no se toca). ¿Seguir?";
   if (pregunta && !confirm(pregunta)) return;
   const botones = [document.getElementById("b-excel"), document.getElementById("b-excel-nuevos"), document.getElementById("b-excel-elegir")];
   const textos = botones.map(b => b.textContent);
@@ -664,8 +664,8 @@ function generarExcel(soloNuevos, ids){
       res.innerHTML = `
         <div class="card" style="background:#f1f8f1">
           <div class="nombre" style="font-size:15px">✅ ${d.pedidos} ${d.soloNuevos ? "pedidos nuevos" : ids ? "pedidos elegidos" : "pedidos"} en ${d.paginas} ${d.paginas === 1 ? "hoja" : "hojas"} A4</div>
-          <div class="meta">Pedidos por hoja: ${d.porPagina.join(" + ")} · cada pestaña es una hoja A4</div>
-          <a class="btn-wa" href="${d.hoja}">📄 Abrir en Google Sheets para imprimir</a>
+          <div class="meta">Pedidos por hoja: ${d.porPagina.join(" + ")}</div>
+          <div class="obs" style="background:white;border-color:#dfe9df;color:var(--text)">📧 Excel enviado a <b>${esc(d.correo || "tu correo")}</b>. Ábrelo desde el correo e imprímelo.</div>
           <div class="ok-row"><span></span>
             <button class="link-btn" onclick="document.getElementById('excel-res').innerHTML=''">cerrar</button></div>
         </div>`;
