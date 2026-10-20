@@ -124,6 +124,8 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .editor-hay .botones{display:flex;gap:8px}
 .editor-hay button{flex:1;font:600 14px 'Montserrat';padding:10px;border-radius:10px;border:1.5px solid var(--primary)}
 .editor-hay .guardar{background:var(--primary);color:white}
+.btn-agotar{display:block;width:100%;margin-top:8px;border:1.5px solid #f5c2c0;background:#fdecea;color:#c62828;font:700 13.5px 'Montserrat';padding:10px;border-radius:10px}
+.btn-agotar.reactivar{border-color:var(--accent);background:#eef7ee;color:var(--primary)}
 .editor-hay .cancelar{background:white;color:var(--primary)}
 .filtros{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
 .filtro{border:1.5px solid #cfdccf;background:white;font:600 12.5px 'Montserrat';color:var(--text);padding:7px 11px;border-radius:20px}
@@ -251,7 +253,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "20-oct 09:30";
+const VERSION_PANEL = "20-oct 13:00";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -490,7 +492,7 @@ function pintarTotales(){
     const abierta = editandoFila === t.fila;
     html += `
       <div class="tot-fila editable ${t.total ? '' : 'cero'} ${abierta ? 'abierta' : ''}" onclick="abrirHay(${t.fila})">
-        <div><div class="tot-nombre">${esc(t.nombre)}${t.proveedor ? `<span class="prov">${esc(t.proveedor)}</span>` : ""}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : "✏️ toca para poner lo que hay"}</div></div>
+        <div><div class="tot-nombre">${esc(t.nombre)}${t.proveedor ? `<span class="prov">${esc(t.proveedor)}</span>` : ""}${t.agotado ? '<span class="etq-nohay">NO HAY MÁS</span>' : ""}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : "✏️ toca para poner lo que hay"}</div></div>
         <div class="tot-cant">${t.total ? cantidad(t.total, t.formato) : "0"}${dif}</div>
       </div>`;
     if (abierta) {
@@ -504,6 +506,9 @@ function pintarTotales(){
           <button class="cancelar" onclick="cerrarHay()">Cancelar</button>
           <button class="guardar" id="b-hay" onclick="guardarHay(${t.fila})">💾 Guardar</button>
         </div>
+        ${t.enWeb ? `<button class="btn-agotar ${t.agotado ? 'reactivar' : ''}" id="b-agotar" onclick="agotar(${t.fila}, ${t.agotado ? 0 : 1})">
+          ${t.agotado ? "✅ Volver a ponerlo a la venta en la web" : "🚫 NO HAY MÁS en la web (HASTA = 0)"}</button>`
+          : '<p class="aviso" style="margin:8px 0 0">No está en PRODUCTOS (la web), no se puede marcar "no hay más".</p>'}
       </div>`;
     }
     if (despuesDe[i] && filtroTot === "todos") html += despuesDe[i].join("");
@@ -544,6 +549,19 @@ function abrirHay(fila){
   const i = document.getElementById("hay-total"); if (i) { i.focus(); i.select(); }
 }
 function cerrarHay(){ editandoFila = null; pintarTotales(); }
+function agotar(fila, valor){
+  const t = totales.find(x => x.fila === fila);
+  if (!t) return;
+  if (valor && !confirm("¿Marcar " + t.nombre + " como NO HAY MÁS en la web?\n(Se pone 0 en la columna HASTA de PRODUCTOS)")) return;
+  const b = document.getElementById("b-agotar"); if (b) { b.disabled = true; b.textContent = "Guardando…"; }
+  llamar("action=agotar&producto=" + encodeURIComponent(t.nombre) + "&valor=" + valor)
+    .then(d => {
+      totales = d.totales || totales; dinero = d.dinero;
+      editandoFila = null; pintarTotales();
+      estado((valor ? "🚫 NO HAY MÁS en la web: " : "✅ Otra vez a la venta: ") + (d.producto || t.nombre));
+    })
+    .catch(err => { estado("No se pudo: " + msgError(err), true); pintarTotales(); });
+}
 function guardarHay(fila){
   const t = totales.find(x => x.fila === fila);
   if (!t) return;
@@ -588,7 +606,11 @@ function confirmar(id){
   enviando[id] = "enviando";
   setTimeout(pintarPedidos, 300);   // dejar que primero se abra WhatsApp
   llamar("action=confirmar&id=" + encodeURIComponent(id))
-    .then(() => {
+    .then(d => {
+      if (d && d.noEncontrados && d.noEncontrados.length) {
+        alert("⚠️ Estos productos del pedido NO están en BYS y no se han marcado:\n\n" + d.noEncontrados.join("\n") +
+              "\n\nRevisa el pedido en BYS (también queda apuntado en la columna G).");
+      }
       enviando[id] = "hecho";
       pedidos = pedidos.filter(x => x.id !== id);
       pintarPedidos();
@@ -962,13 +984,27 @@ function cargarQuien(){
     .then(d => { quien = d.clientes; pintarQuien(); })
     .catch(err => { document.getElementById("ex-lista").innerHTML = '<div class="vacio">Error: ' + esc(msgError(err)) + '</div>'; });
 }
+// Texto "SOLO 1 DOCENA", "SOLO 1 KG", "SOLO 2 UNIDADES"…
+function textoSolo(cantidad, formato){
+  const f = String(formato || "").trim();
+  let u;
+  if (/^kg$/i.test(f)) u = "KG";
+  else if (/^\d/.test(f)) u = "x " + f.toUpperCase();                   // 3 kg, 580 ml…
+  else { u = f.toUpperCase(); if (cantidad > 1 && u) u += /[AEIOU]$/.test(u) ? "S" : "ES"; }
+  return ("SOLO " + num(cantidad) + " " + u).trim();
+}
 function ponerCantidad(i, cantidad){
   const p = prodSel(); const c = quien[i];
   if (!p || !c) return;
   const antes = c.cantidad;
+  let nota = "";
+  if (antes > 0 && cantidad > 0 && cantidad < antes) {                 // le quitas cantidad: ¿avisar "SOLO …"?
+    const txt = textoSolo(cantidad, p.formato);
+    if (confirm("¿Poner al lado «" + txt + "»?\n\nAceptar = sí, sale en su pedido\nCancelar = no poner nada")) nota = txt;
+  }
   c.cantidad = cantidad === "" ? null : cantidad; pintarQuien();             // se ve al momento ("" = quitar)
   llamar("action=ponercantidad&bloque=" + c.bloque + "&offset=" + (c.offset !== undefined ? c.offset : p.offset) + "&producto=" + encodeURIComponent(p.nombre) +
-         "&cantidad=" + cantidad)
+         "&cantidad=" + cantidad + (nota ? "&nota=" + encodeURIComponent(nota) : ""))
     .then(d => { quien = d.clientes; pintarQuien(); estado("Guardado " + c.nombre + ": " + (cantidad === "" ? "quitado" : cantidad === 0 ? "0 · NO HAY MAS" : num(cantidad))); cargar(); })
     .catch(err => { c.cantidad = antes; pintarQuien(); estado("No se pudo guardar: " + msgError(err), true); });
 }
