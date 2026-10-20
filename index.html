@@ -253,7 +253,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "20-oct 13:00";
+const VERSION_PANEL = "20-oct 13:50";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -492,7 +492,7 @@ function pintarTotales(){
     const abierta = editandoFila === t.fila;
     html += `
       <div class="tot-fila editable ${t.total ? '' : 'cero'} ${abierta ? 'abierta' : ''}" onclick="abrirHay(${t.fila})">
-        <div><div class="tot-nombre">${esc(t.nombre)}${t.proveedor ? `<span class="prov">${esc(t.proveedor)}</span>` : ""}${t.agotado ? '<span class="etq-nohay">NO HAY MÁS</span>' : ""}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : "✏️ toca para poner lo que hay"}</div></div>
+        <div><div class="tot-nombre">${esc(t.nombre)}${t.proveedor ? `<span class="prov" style="${estiloProv(t.proveedor)}">${esc(t.proveedor)}</span>` : ""}${t.agotado ? '<span class="etq-nohay">NO HAY MÁS</span>' : ""}</div><div class="tot-det">${t.hay !== null ? "hay " + num(t.hay) : "✏️ toca para poner lo que hay"}</div></div>
         <div class="tot-cant">${t.total ? cantidad(t.total, t.formato) : "0"}${dif}</div>
       </div>`;
     if (abierta) {
@@ -547,6 +547,25 @@ function abrirHay(fila){
   editandoFila = editandoFila === fila ? null : fila;
   pintarTotales();
   const i = document.getElementById("hay-total"); if (i) { i.focus(); i.select(); }
+}
+// Cada proveedor con su color (siempre el mismo para el mismo nombre)
+const COLORES_PROV = [
+  ["#e3f2fd", "#1565c0"], ["#e0f2f1", "#00695c"], ["#fff3e0", "#e65100"], ["#ede7f6", "#5e35b1"],
+  ["#fff8e1", "#8d6e00"], ["#efebe9", "#5d4037"], ["#e8eaf6", "#283593"], ["#f9fbe7", "#827717"],
+  ["#f1f8e9", "#33691e"], ["#e0f7fa", "#00838f"], ["#f3e5f5", "#7b1fa2"], ["#eceff1", "#37474f"]
+];
+const colorFijoProv = {};
+function estiloProv(nombre){
+  const clave = String(nombre || "").trim().toUpperCase();
+  if (!clave || /^\?+$/.test(clave)) return "background:#eeeeee;color:#757575";   // ??? = sin proveedor
+  if (!(clave in colorFijoProv)) {
+    // los proveedores se reparten los colores por orden alfabético, así no se repiten
+    const todos = [...new Set(totales.map(t => String(t.proveedor || "").trim().toUpperCase()).filter(x => x && !/^\?+$/.test(x)))].sort();
+    todos.forEach((p, i) => { if (!(p in colorFijoProv)) colorFijoProv[p] = i % COLORES_PROV.length; });
+    if (!(clave in colorFijoProv)) colorFijoProv[clave] = Object.keys(colorFijoProv).length % COLORES_PROV.length;
+  }
+  const c = COLORES_PROV[colorFijoProv[clave]];
+  return "background:" + c[0] + ";color:" + c[1];
 }
 function cerrarHay(){ editandoFila = null; pintarTotales(); }
 function agotar(fila, valor){
