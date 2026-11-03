@@ -258,7 +258,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "2-nov 12:40";
+const VERSION_PANEL = "3-nov 06:40";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -344,7 +344,9 @@ function tarjeta(p, nuevo, esPasado){
   let pie;
   if (esPasado) {
     pie = `<div class="ok-row"><span>✓ En BYS</span>
-             <a class="link-btn" href="${wa(p.movil, "34", textoConfirmacion(p))}">reenviar confirmación</a></div>`;
+             <a class="link-btn" href="${wa(p.movil, "34", textoConfirmacion(p))}">reenviar confirmación</a></div>
+           <div class="ok-row" style="justify-content:flex-end;margin-top:0"><button class="link-btn" onclick="abrirUnirPasado('${p.id}')">${uniendo === "v:" + p.id ? "✕ cerrar" : "🔗 Unir con otro pedido"}</button></div>
+           ${uniendo === "v:" + p.id ? htmlUnirPasado(p) : ""}`;
   } else if (enviando[p.id] === "enviando") {
     pie = `<div class="ok-row"><span>⏳ Pasando a BYS…</span></div>`;
   } else if (enviando[p.id] === "error") {
@@ -411,6 +413,48 @@ function unir(id, destino){
       if (d.tipo === "bys" && confirm("¿Enviar a " + p.nombre + " la confirmación por WhatsApp de lo que ha añadido?")) {
         window.open(wa(p.movil, "34", textoConfirmacion(p)), "_blank");
       }
+    })
+    .catch(err => estado("No se pudo unir: " + msgError(err), true));
+}
+
+// ---- unir un pedido ya pasado (VIEJOS / BYS) con otro que ya está en BYS ----
+// Bloque de BYS que corresponde a un pedido de VIEJOS: por teléfono (o nombre). Si la misma persona
+// tiene varios, se emparejan por orden (el 1.º de VIEJOS con el 1.º bloque de BYS, etc.).
+function bloqueDeViejo(p){
+  const c = clientesBysCache || [];
+  const es = x => (ultimos9(x.telefono || x.movil) && ultimos9(x.telefono || x.movil) === ultimos9(p.movil)) || mismoNombre(x.nombre, p.nombre);
+  const bloques = c.filter(es).sort((a, b) => a.bloque - b.bloque);
+  if (!bloques.length) return null;
+  const mios = pasados.filter(es).sort((a, b) => a.ts - b.ts);
+  const k = Math.max(0, mios.findIndex(x => x.id === p.id));
+  return bloques[Math.min(k, bloques.length - 1)];
+}
+function abrirUnirPasado(id){
+  uniendo = uniendo === "v:" + id ? null : "v:" + id;
+  pintarPedidos();
+  if (uniendo) llamar("action=clientesbys").then(d => { clientesBysCache = d.clientes || []; pintarPedidos(); })
+    .catch(err => { clientesBysCache = []; estado("No se pudo leer BYS: " + msgError(err), true); pintarPedidos(); });
+}
+function htmlUnirPasado(p){
+  if (!clientesBysCache) return '<div class="caja-unir"><div class="vacio" style="padding:10px 0">Cargando…</div></div>';
+  const origen = bloqueDeViejo(p);
+  if (!origen) return '<div class="caja-unir"><div class="vacio" style="padding:10px 0">No encuentro este pedido en BYS</div></div>';
+  const misma = x => (ultimos9(x.telefono) && ultimos9(x.telefono) === ultimos9(p.movil)) || mismoNombre(x.nombre, p.nombre);
+  const ops = clientesBysCache.filter(x => x.bloque !== origen.bloque)
+    .sort((a, b) => (misma(b) - misma(a)) || a.nombre.localeCompare(b.nombre, "es"));
+  const lista = ops.length ? ops.map(o => `<button class="op-unir ${misma(o) ? 'misma' : ''}" onclick="unirBys(${origen.bloque}, ${o.bloque}, '${esc(p.nombre).replace(/'/g, "")}', '${esc(o.nombre).replace(/'/g, "")}')">
+        <b>${esc(o.nombre)}</b>${misma(o) ? ' <span class="etq-misma">misma persona</span>' : ""}<br><span>ya en BYS · ${esc(o.telefono || "")}</span></button>`).join("")
+    : '<div class="vacio" style="padding:10px 0">No hay otros pedidos en BYS</div>';
+  return `<div class="caja-unir"><div class="aviso" style="margin:0 0 6px">¿A qué pedido lo sumamos? Este se borra de BYS y queda uno solo.</div>${lista}</div>`;
+}
+function unirBys(origen, destino, nO, nD){
+  if (!confirm("¿Sumar este pedido de " + nO + " al de " + nD + "?\n\nEste se borra de BYS y queda uno solo.")) return;
+  estado("Uniendo pedidos…");
+  llamar("action=unir&origen=" + origen + "&destino=" + destino)
+    .then(r => {
+      uniendo = null; clientesBysCache = null; pintarPedidos(); cargar();
+      estado("🔗 Unido: el pedido de " + r.origen + " está ahora dentro del de " + r.nombre);
+      if (r.noEncontrados && r.noEncontrados.length) alert("⚠️ Estos productos no se encontraron y no se han sumado:\n\n" + r.noEncontrados.join("\n"));
     })
     .catch(err => estado("No se pudo unir: " + msgError(err), true));
 }
