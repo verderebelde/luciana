@@ -258,7 +258,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "9-nov 21:40";
+const VERSION_PANEL = "9-nov 22:40";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -366,7 +366,8 @@ function tarjeta(p, nuevo, esPasado){
              <button class="link-btn" onclick="confirmar('${p.id}')">Reintentar</button></div>`;
   } else {
     pie = `<a class="btn-wa" href="${wa(p.movil, "34", textoConfirmacion(p), p.nombre)}" onclick="confirmar('${p.id}')">🟢 ENVIAR CONFIRMACIÓN</a>
-           <div class="ok-row" style="justify-content:flex-end"><button class="link-btn" onclick="abrirUnir('${p.id}')">${uniendo === p.id ? "✕ cerrar" : "🔗 Unir con otro pedido"}</button></div>
+           <div class="ok-row"><button class="link-btn" style="color:#c62828" onclick="eliminar('${p.id}')">🗑️ Eliminar</button>
+             <button class="link-btn" onclick="abrirUnir('${p.id}')">${uniendo === p.id ? "✕ cerrar" : "🔗 Unir con otro pedido"}</button></div>
            ${uniendo === p.id ? htmlUnir(p) : ""}`;
   }
   return `
@@ -485,6 +486,15 @@ function unirBys(origen, destino, nO, nD, idViejo){
       if (r.noEncontrados && r.noEncontrados.length) alert("⚠️ Estos productos no se encontraron y no se han sumado:\n\n" + r.noEncontrados.join("\n"));
     })
     .catch(err => estado("No se pudo unir: " + msgError(err), true));
+}
+
+function eliminar(id){
+  const p = pedidos.find(x => x.id === id);
+  if (!p || !confirm("¿Eliminar el pedido de " + p.nombre + " (" + p.total + ")?\n\nNo se pasa a BYS. Queda una copia en la hoja BORRADOS.")) return;
+  estado("Eliminando…");
+  llamar("action=eliminar&id=" + encodeURIComponent(id))
+    .then(d => { pedidos = pedidos.filter(x => x.id !== id); pintarPedidos(); estado("🗑️ Eliminado el pedido de " + (d.nombre || p.nombre)); })
+    .catch(err => estado("No se pudo eliminar: " + msgError(err), true));
 }
 
 function pintarPedidos(){
@@ -739,7 +749,8 @@ function cargar(){
       dinero = d.dinero === undefined ? null : d.dinero;
       if (editandoFila === null) pintarTotales();   // no se borra lo que estás escribiendo
       estado("Actualizado " + new Date().toLocaleTimeString("es-ES") + " · panel " + VERSION_PANEL +
-             " · script " + (d.version || "VIEJO ⚠️") + (d.cuenta ? " · ✉️ " + d.cuenta.split("@")[0] : ""), !d.version);
+             " · script " + (d.version || "VIEJO ⚠️") + (d.cuenta ? " · ✉️ " + d.cuenta.split("@")[0] : "") +
+             (d.duplicadosQuitados ? " · 🗑️ " + d.duplicadosQuitados + " duplicado(s) quitado(s)" : ""), !d.version);
     })
     .catch(err => {
       cargando = false;
