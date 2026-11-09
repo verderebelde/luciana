@@ -258,7 +258,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "3-nov 06:50";
+const VERSION_PANEL = "9-nov 21:40";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -266,8 +266,11 @@ const CADA_SEGUNDOS = 15;
 // A la izquierda: el móvil que ponen en el pedido. A la derecha: su WhatsApp,
 // con el prefijo del país delante (sin + ni espacios).
 const WHATSAPP_DISTINTO = {
-  "634541650": "32495124682"   // Charlotte → +32 495 12 46 82
+  "634541650": "32495124682",  // Charlotte (si pone su móvil español) → +32 495 12 46 82
+  "495124682": "32495124682"   // Charlotte (si pone su móvil belga sin el 32)
 };
+// Clientes con prefijo de otro país: si el nombre contiene esto, se usa este prefijo en vez del 34
+const PREFIJO_POR_NOMBRE = { "charlotte": "32" };
 
 let vista = "pedidos";
 let conocidos = null;     // ids ya vistos, para resaltar los nuevos
@@ -291,8 +294,16 @@ function num(n){ return String(Math.round(n * 100) / 100).replace(".", ","); }
 function cantidad(n, formato){
   return formato.toLowerCase() === "kg" ? num(n) + " kg" : num(n) + " × " + esc(formato || "ud");
 }
-function wa(movil, prefijo, texto){
-  const numero = WHATSAPP_DISTINTO[movil] || ((prefijo || "34") + movil);
+function wa(movil, prefijo, texto, nombre){
+  let d = String(movil || "").replace(/\D/g, "").replace(/^00/, "");
+  let numero = WHATSAPP_DISTINTO[d];
+  if (!numero) {
+    const n = String(nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const pref = Object.keys(PREFIJO_POR_NOMBRE).find(k => n.indexOf(k) !== -1);
+    if (pref) numero = d.indexOf(PREFIJO_POR_NOMBRE[pref]) === 0 && d.length > 9 ? d : PREFIJO_POR_NOMBRE[pref] + d;   // Charlotte → +32
+    else if (d.length > 9) numero = d;                                   // ya viene con prefijo de país
+    else numero = (prefijo || "34") + d;
+  }
   return "https://wa.me/" + numero + "?text=" + encodeURIComponent(texto);
 }
 function estado(texto, error){
@@ -339,12 +350,13 @@ function textoConfirmacion(p){
 
 function tarjeta(p, nuevo, esPasado){
   const obs = p.observaciones ? `<div class="obs">📝 ${esc(p.observaciones)}</div>` : "";
-  const otroWa = WHATSAPP_DISTINTO[p.movil]
-    ? `<div class="meta" style="margin:8px 0 0">📱 La confirmación va a su WhatsApp +${WHATSAPP_DISTINTO[p.movil]}</div>` : "";
+  const numWa = (wa(p.movil, "34", "", p.nombre).match(/wa\.me\/(\d+)/) || [])[1] || "";
+  const otroWa = numWa && numWa.indexOf("34") !== 0
+    ? `<div class="meta" style="margin:8px 0 0">📱 La confirmación va a su WhatsApp +${numWa}</div>` : "";
   let pie;
   if (esPasado) {
     pie = `<div class="ok-row"><span>✓ En BYS</span>
-             <a class="link-btn" href="${wa(p.movil, "34", textoConfirmacion(p))}">reenviar confirmación</a></div>
+             <a class="link-btn" href="${wa(p.movil, "34", textoConfirmacion(p), p.nombre)}">reenviar confirmación</a></div>
            <div class="ok-row" style="justify-content:flex-end;margin-top:0"><button class="link-btn" onclick="abrirUnirPasado('${p.id}')">${uniendo === "v:" + p.id ? "✕ cerrar" : "🔗 Unir con otro pedido"}</button></div>
            ${uniendo === "v:" + p.id ? htmlUnirPasado(p) : ""}`;
   } else if (enviando[p.id] === "enviando") {
@@ -353,7 +365,7 @@ function tarjeta(p, nuevo, esPasado){
     pie = `<div class="ok-row"><span style="color:#c62828">⚠️ No se pudo pasar a BYS</span>
              <button class="link-btn" onclick="confirmar('${p.id}')">Reintentar</button></div>`;
   } else {
-    pie = `<a class="btn-wa" href="${wa(p.movil, "34", textoConfirmacion(p))}" onclick="confirmar('${p.id}')">🟢 ENVIAR CONFIRMACIÓN</a>
+    pie = `<a class="btn-wa" href="${wa(p.movil, "34", textoConfirmacion(p), p.nombre)}" onclick="confirmar('${p.id}')">🟢 ENVIAR CONFIRMACIÓN</a>
            <div class="ok-row" style="justify-content:flex-end"><button class="link-btn" onclick="abrirUnir('${p.id}')">${uniendo === p.id ? "✕ cerrar" : "🔗 Unir con otro pedido"}</button></div>
            ${uniendo === p.id ? htmlUnir(p) : ""}`;
   }
@@ -411,7 +423,7 @@ function unir(id, destino){
       estado("🔗 Unido con el pedido de " + d.nombre);
       if (d.noEncontrados && d.noEncontrados.length) alert("⚠️ Estos productos NO están en BYS y no se han sumado:\n\n" + d.noEncontrados.join("\n"));
       if (d.tipo === "bys" && confirm("¿Enviar a " + p.nombre + " la confirmación por WhatsApp de lo que ha añadido?")) {
-        window.open(wa(p.movil, "34", textoConfirmacion(p)), "_blank");
+        window.open(wa(p.movil, "34", textoConfirmacion(p), p.nombre), "_blank");
       }
     })
     .catch(err => estado("No se pudo unir: " + msgError(err), true));
@@ -854,7 +866,7 @@ function filaPersona(tipo, p, texto){
     <div class="persona ${enviado ? 'enviado' : ''}">
       <div><div class="pn">${esc(nombre)}</div><div class="pm">${p.movil}${extra}${enviado ? " · ✓ enviado" : ""}</div></div>
       <div class="derecha">
-        <a class="btn-enviar" href="${wa(p.movil, p.prefijo, texto)}" onclick="marcar('${tipo}','${p.movil}')">👉 ENVIAR</a>
+        <a class="btn-enviar" href="${wa(p.movil, p.prefijo, texto, p.nombre)}" onclick="marcar('${tipo}','${p.movil}')">👉 ENVIAR</a>
         ${tipo === "8am" ? `<button class="btn-quitar" title="Quitar de la lista" onclick="quitar8am(${p.fila}, '${p.movil}')">✕</button>` : ""}
       </div>
     </div>`;
