@@ -144,6 +144,14 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 .botones-excel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
 .botones-excel .btn-sec{font-size:12px;padding:10px 4px}
 .botones-excel .btn-sec{min-width:0}
+.obs{cursor:pointer}
+.obs.obs-vacia{background:transparent;border:1px dashed #cfdccf;color:var(--muted);font-weight:500}
+.obs-edit{margin-top:8px}
+.obs-edit textarea{width:100%;font:14px 'Montserrat';padding:10px;border-radius:10px;border:1.5px solid var(--accent);resize:vertical}
+.obs-edit .botones{display:flex;gap:8px;margin-top:6px}
+.obs-edit .botones button{flex:1;padding:9px;border-radius:10px;font:700 13.5px 'Montserrat'}
+.obs-edit .cancelar{background:white;border:1.5px solid #cfdccf;color:var(--muted)}
+.obs-edit .guardar{background:var(--primary);border:none;color:white}
 .caja-unir{background:#f6fbf6;border:1px solid var(--accent);border-radius:12px;padding:10px;margin-top:6px}
 .op-unir{display:block;width:100%;text-align:left;background:white;border:1.5px solid #dfe9df;border-radius:10px;padding:9px 12px;margin-bottom:6px;font:500 14px 'Montserrat';color:var(--text)}
 .op-unir span{font-size:12px;color:var(--muted)}
@@ -258,7 +266,7 @@ textarea{width:100%;min-height:110px;font:15px 'Montserrat';padding:12px;border-
 </div>
 
 <script>
-const VERSION_PANEL = "9-nov 22:40";
+const VERSION_PANEL = "9-nov 23:00";
 const API_URL = "https://script.google.com/macros/s/AKfycbwdQsPAPbOUmlxw-L7N-_gjRVG3Yl451xGmYrLa1rLxxMUoNVYphOxWbQ6kvfb_6q2OoA/exec";
 const CADA_SEGUNDOS = 15;
 
@@ -349,7 +357,12 @@ function textoConfirmacion(p){
 }
 
 function tarjeta(p, nuevo, esPasado){
-  const obs = p.observaciones ? `<div class="obs">📝 ${esc(p.observaciones)}</div>` : "";
+  // Observaciones: se tocan y se escriben ahí mismo
+  const obs = editObs === p.id
+    ? `<div class="obs-edit"><textarea id="obs-txt" rows="3" placeholder="Escribe las observaciones…">${esc(p.observaciones || "")}</textarea>
+         <div class="botones"><button class="cancelar" onclick="editObs=null;pintarPedidos()">Cancelar</button>
+         <button class="guardar" onclick="guardarObs('${p.id}', ${esPasado})">💾 Guardar</button></div></div>`
+    : `<div class="obs ${p.observaciones ? "" : "obs-vacia"}" onclick="abrirObs('${p.id}')">📝 ${p.observaciones ? esc(p.observaciones) : "Observaciones (toca para escribir)"}</div>`;
   const numWa = (wa(p.movil, "34", "", p.nombre).match(/wa\.me\/(\d+)/) || [])[1] || "";
   const otroWa = numWa && numWa.indexOf("34") !== 0
     ? `<div class="meta" style="margin:8px 0 0">📱 La confirmación va a su WhatsApp +${numWa}</div>` : "";
@@ -488,6 +501,30 @@ function unirBys(origen, destino, nO, nD, idViejo){
     .catch(err => estado("No se pudo unir: " + msgError(err), true));
 }
 
+let editObs = null;   // id del pedido cuyas observaciones se están escribiendo
+function abrirObs(id){
+  editObs = id; pintarPedidos();
+  const t = document.getElementById("obs-txt");
+  if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+}
+function guardarObs(id, pasado){
+  const p = (pasado ? pasados : pedidos).find(x => x.id === id);
+  const t = document.getElementById("obs-txt");
+  if (!p || !t) return;
+  const texto = t.value.trim(), antes = p.observaciones;
+  p.observaciones = texto; editObs = null; pintarPedidos();
+  estado("Guardando observaciones…");
+  const enviar = extra => llamar("action=observaciones&texto=" + encodeURIComponent(texto) + extra)
+    .then(() => estado("📝 Observaciones guardadas: " + p.nombre))
+    .catch(err => { p.observaciones = antes; pintarPedidos(); estado("No se pudo guardar: " + msgError(err), true); });
+  if (!pasado) return enviar("&id=" + encodeURIComponent(id));
+  llamar("action=clientesbys").then(d => {                              // ya en BYS: buscar su bloque
+    clientesBysCache = d.clientes || [];
+    const b = bloqueDeViejo(p);
+    if (!b) { p.observaciones = antes; pintarPedidos(); estado("No encuentro el pedido de " + p.nombre + " en BYS", true); return; }
+    enviar("&bloque=" + b.bloque + "&vid=" + encodeURIComponent(id));
+  }).catch(err => { p.observaciones = antes; pintarPedidos(); estado("No se pudo leer BYS: " + msgError(err), true); });
+}
 function eliminar(id){
   const p = pedidos.find(x => x.id === id);
   if (!p || !confirm("¿Eliminar el pedido de " + p.nombre + " (" + p.total + ")?\n\nNo se pasa a BYS. Queda una copia en la hoja BORRADOS.")) return;
@@ -745,7 +782,7 @@ function cargar(){
       pedidos = d.pedidos.filter(p => enviando[p.id] !== "hecho");
       pasados = d.pasados || [];
       totales = d.totales || [];
-      pintarPedidos();
+      if (editObs === null) pintarPedidos();          // no se borra lo que estás escribiendo
       dinero = d.dinero === undefined ? null : d.dinero;
       if (editandoFila === null) pintarTotales();   // no se borra lo que estás escribiendo
       estado("Actualizado " + new Date().toLocaleTimeString("es-ES") + " · panel " + VERSION_PANEL +
